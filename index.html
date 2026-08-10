@@ -197,6 +197,8 @@ tbody tr:hover{background:color-mix(in srgb,var(--text-primary) 4%,transparent)}
     <div class="ticks">
       <label class="tick"><input type="checkbox" id="dots" checked>
         Individual dots</label>
+      <label class="tick"><input type="checkbox" id="box">
+        Box plot</label>
     </div>
   </div>
   <div class="fgroup">
@@ -215,7 +217,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--text-primary) 4%,transparent)}
 <div class="grid" id="grid"></div>
 
 <div class="foot">
-  <p><b>Page layout</b> — this page is divided into 3 tabs: <b>Herd and lactation stage</b> (1 chart) · <b>Milk quality</b> (3 chart) · <b>Udder, mastitis and SCC</b> (3 charts) 7 charts in total
+  <p><b>Page layout</b> — this page is divided into 3 tabs: <b>Herd and lactation stage</b> (1 chart) · <b>Milk quality</b> (3 chart) · <b>Udder, mastitis and SCC</b> (4 charts) 8 charts in total
    all of it is still the same complete dataset with nothing removed — metrics that answer the same question have simply been merged into one card <b>switch with the small chips under the chart title</b>
    (for example the “Feed-derived metrics and milk properties” card holds Fat:Protein, MUN, Citric acid, FPD, FFA, Density and Acidity together in one card) ·
    <b>the filter bar at the top sits above the tabs</b> so it applies to every tab at once. Switching tabs does not change the selected months or thresholds ·
@@ -311,7 +313,7 @@ const fmtD = i => D2[i].getDate()+" "+TH_ABBR[D2[i].getMonth()];
 const fmtN = (v,d=0) => v==null||!isFinite(v) ? "—" : v.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
 
 let sel = new Set(MONTHS), thSub = 200, thSev = 500, thWin = 14,
-    sortKey = "meanScc", sortDir = -1, query = "", expanded = null, showDots = true, selCow = null,
+    sortKey = "meanScc", sortDir = -1, query = "", expanded = null, showDots = true, showBox = false, selCow = null,
     cutOut = false;   // permanently off - kept so keep()/fences() stay inert
 // Overlay lines (DIM, NEB cases) are switched on per CARD from that card's legend,
 // exactly like Casein or TS. An entry here means "shown"; empty = every overlay off.
@@ -331,7 +333,7 @@ const TABS = [
   {k:"milk",  t:"Milk quality",     en:"Milk quality", n:4,
    note:"What is in the milk you harvest — individual composition, MUN and protein balance, the metrics that reflect feeding "+
         "and bulk-tank hygiene · <b>nothing about mastitis appears in this tab</b> see the next tab"},
-  {k:"udder", t:"Udder, mastitis and SCC", en:"Udder health", n:3,
+  {k:"udder", t:"Udder, mastitis and SCC", en:"Udder health", n:4,
    note:"Udder health — herd-level SCC, cow counts by udder status, veterinary treatments "+
         "and culture results with susceptibility"}];
 let tab = "milk";
@@ -878,6 +880,82 @@ const KET = KETDATA.map(([cow,calv,lac,no,date,dim,bhba])=>({
 const KET_SUB = 1.2, KET_CLIN = 3.0;        // mmol/L, matching Thresholds!$B$46-47
 const KET_WEEKS = ["Week 1","Week 2","Week 3","Week 4","Week 5"];
 const KET_DIM   = ["DIM 0–6","DIM 7–13","DIM 14–20","DIM 21–27","DIM 28–34"];
+// ---- Mastitis epidemiology: LNIR / DPNIR / DPCURE / CML / CMDP -----------
+// Computed across EVERY test day, never only the selected months. LNIR asks what a
+// cow did at the *following* recording, so slicing the series by month would invent
+// a new infection at every month boundary. Only the display is filtered.
+const EPI_MINN = 20;          // below this many cows a rate is shown but flagged
+function epiModel(){
+  const T = thSub, T400 = 400, T100 = 100;
+  const byLac = new Map();                    // cow+lactation -> her recordings, in order
+  DATA.rows.forEach(r=>{
+    const k = r[1]+"|"+r[C.Lactation];
+    if(!byLac.has(k)) byLac.set(k,[]);
+    byLac.get(k).push(r);
+  });
+  byLac.forEach(v=>v.sort((a,b)=>a[0]-b[0]));
+  const lastOfLac = new Map();
+  byLac.forEach((v,k)=>lastOfLac.set(k, v[v.length-1]));
+
+  const blank = ()=>D2.map(()=>({d:0,n:0}));
+  const lnir = blank(), dpn = blank(), dpc = blank();
+
+  byLac.forEach((v,k)=>{
+    const cow = k.slice(0,k.lastIndexOf("|"));
+    const lac = +k.slice(k.lastIndexOf("|")+1);
+    v.forEach((r,i)=>{
+      const di = r[0], scc = r[C.SCC], dim = r[C.DIM], prior = v.slice(0,i);
+      // --- LNIR. "Uninfected" = clean all lactation, OR the previous three are all
+      // under threshold, OR she was high once but the previous two are under 100k.
+      if(prior.length && scc!=null){
+        const hi = prior.filter(x=>x[C.SCC]!=null && x[C.SCC]>=T).length;
+        const p3 = prior.slice(-3), p2 = prior.slice(-2);
+        const clean3 = p3.length===3 && p3.every(x=>x[C.SCC]!=null && x[C.SCC]<T);
+        const cured2 = hi>0 && p2.length===2 && p2.every(x=>x[C.SCC]!=null && x[C.SCC]<T100);
+        if(hi===0 || clean3 || cured2){ lnir[di].d++; if(scc>=T) lnir[di].n++; }
+      }
+      // --- Dry period. Her first recording of this lactation inside 30 days of
+      // calving, paired with the last recording of her previous lactation.
+      if(i===0 && dim!=null && dim<=30 && scc!=null && lac>1){
+        const pre = lastOfLac.get(cow+"|"+(lac-1));
+        if(pre && pre[C.SCC]!=null){
+          const infected = scc >= (dim<=5 ? T400 : T);   // colostral SCC is high by nature
+          if(pre[C.SCC] < T){ dpn[di].d++; if(infected) dpn[di].n++; }
+          else              { dpc[di].d++; if(!infected) dpc[di].n++; }
+        }
+      }
+    });
+  });
+
+  // --- DIM and lactation at each treatment, from the cow's nearest recording
+  const near = new Map();
+  DATA.rows.forEach(r=>{ if(r[C.DIM]==null) return;
+    if(!near.has(r[1])) near.set(r[1],[]); near.get(r[1]).push(r); });
+  const idx = new Map();                       // first case per cow+lactation
+  MASTALL.filter(e=>e.dx===0).sort((a,b)=>a.day-b.day).forEach(e=>{
+    const rs = near.get(e.cow); if(!rs) return;
+    let best=null, bd=Infinity;
+    rs.forEach(r=>{ const d=Math.abs(D2[r[0]].getTime()/DAY - e.day); if(d<bd){bd=d; best=r;} });
+    const calving = D2[best[0]].getTime()/DAY - best[C.DIM];
+    const key = e.cow+"|"+best[C.Lactation];
+    if(!idx.has(key)) idx.set(key,{month:e.month, dim:Math.round(e.day-calving)});
+  });
+  const cases = [...idx.values()];
+
+  const per = MONTHS.map(m=>{
+    const dis = D2.map((d,i)=>i).filter(i=>D2[i].getMonth()===m);
+    const add = a => dis.reduce((o,i)=>({d:o.d+a[i].d, n:o.n+a[i].n}),{d:0,n:0});
+    const L=add(lnir), N=add(dpn), U=add(dpc);
+    const cows = dis.length
+      ? dis.reduce((a,i)=>a+DATA.rows.filter(r=>r[0]===i).length,0)/dis.length : 0;
+    const cml  = cases.filter(x=>x.month===m && x.dim!=null && x.dim>=31 && x.dim<=305).length;
+    const cmdp = cases.filter(x=>x.month===m && x.dim!=null && x.dim<31).length;
+    const pct = o => o.d ? o.n/o.d*100 : null;
+    return {m, L, N, U, cows, cml, cmdp, lnir:pct(L), dpn:pct(N), dpc:pct(U),
+            cmlR: cows? cml/cows*1200 : null, cmdpR: cows? cmdp/cows*1200 : null};
+  });
+  return {per, sel: per.filter(p=>sel.has(p.m))};
+}
 function ketModel(){
   const inSel = KET.filter(k=>sel.has(k.month));
   const per = KET_WEEKS.map((_,w)=>{
@@ -1023,7 +1101,8 @@ function lineChart(host,cats,series,opts={}){
   let lo=Math.min(...all), hi=Math.max(...all);
   // Points arrive already fenced by model(); the same fence produced the lines.
   const cutN = cutOut ? (opts.cutN||0) : 0;
-  const groups = (showDots ? (opts.scatter||[]) : []).filter(g=>vis(g.si??0));
+  const groups = ((showDots||showBox) ? (opts.scatter||[]) : [])
+                  .filter(g=>vis(g.si??0));
   if(groups.length){
     const pv=groups.flatMap(g=>g.points.map(q=>q[1]));
     if(pv.length){
@@ -1041,22 +1120,75 @@ function lineChart(host,cats,series,opts={}){
   // every drawn dot is also registered in `pts` so the overlay can find the nearest one.
   const pts=[];
   let over=0, overMax=null, under=0;
+  // One x-geometry shared by the dots and the box, so a series' box always sits
+  // over its own dots. With a single series both are centred on the category.
+  // With several, each series takes a sub-slot and its dots AND its box move
+  // into that sub-slot together — which also stops six series' dots piling up
+  // on one x, the way they used to.
+  const nG   = groups.length;
+  const slotW= (W-PAD.l-PAD.r)/Math.max(cats.length,1);
+  const bandW= Math.min(slotW*0.52, 30);
+  const subW = nG>1 ? bandW/nG : bandW;
+  const offOf= gi => nG>1 ? (-bandW/2 + subW*(gi+0.5)) : 0;
+  const jitHalf = nG>1 ? subW*0.42
+                       : Math.min((W-PAD.l-PAD.r)/Math.max(cats.length-1,1)*0.34, 15);
   groups.forEach((g,gi)=>{
-    const half=Math.min((W-PAD.l-PAD.r)/Math.max(cats.length-1,1)*0.34, 15), r=2.2;
+    const r=2.2;
     let d="";
+    if(!showDots) return;
     g.points.forEach((q,i)=>{
       const [ci,v,row]=q;
       if(v>aHi){ over++; if(overMax==null||v>overMax) overMax=v; return; }
       if(v<aLo){ under++; return; }
-      const x=X(ci)+jit(gi,i)*half, y=Y(v);
+      const x=X(ci)+offOf(gi)+jit(gi,i)*jitHalf, y=Y(v);
       pts.push({x,y,v,row,g,ci});
       d+=`M${(x-r).toFixed(1)} ${y.toFixed(1)}a${r} ${r} 0 1 0 ${2*r} 0a${r} ${r} 0 1 0 ${-2*r} 0`;
     });
     if(d) svg.appendChild(el("path",{d,fill:g.color,"fill-opacity":0.28,
       "pointer-events":"none","shape-rendering":"geometricPrecision"}));
   });
-  if(over||under||cutN){
+
+  // ---- box plot -----------------------------------------------------------
+  // Tukey: box = Q1..Q3, line = median, whiskers reach the furthest observation
+  // still inside 1.5xIQR. Drawn over the dots so both can be read at once, and
+  // offset per series so several boxes can share one test day without touching.
+  // Skipped where a category has fewer than 5 observations - four points do not
+  // describe a distribution, and a box drawn from them reads as if they did.
+  let boxSkipped = 0;
+  if(showBox && groups.length){
+    groups.forEach((g,gi)=>{
+      const byCat = new Map();
+      g.points.forEach(([ci,v])=>{ if(!byCat.has(ci)) byCat.set(ci,[]); byCat.get(ci).push(v); });
+      const w   = nG>1 ? subW*0.82 : bandW;
+      const off = offOf(gi);
+      byCat.forEach((vs,ci)=>{
+        if(vs.length<5){ boxSkipped++; return; }
+        const q1=quantile(vs,0.25), md=quantile(vs,0.5), q3=quantile(vs,0.75);
+        const iqr=q3-q1;
+        const inl=vs.filter(v=>v>=q1-1.5*iqr && v<=q3+1.5*iqr);
+        const wLo=Math.min(...inl), wHi=Math.max(...inl);
+        const cx=X(ci)+off, cl=v=>Math.max(aLo,Math.min(aHi,v));
+        const yq1=Y(cl(q1)), yq3=Y(cl(q3)), ymd=Y(cl(md));
+        const yHi=Y(cl(wHi)), yLo=Y(cl(wLo));
+        const ln=(x1,y1,x2,y2,sw,op)=>el("line",{x1,y1,x2,y2,stroke:g.color,
+                  "stroke-width":sw,"stroke-opacity":op,"stroke-linecap":"round"});
+        const grp=el("g",{"pointer-events":"none"});
+        grp.appendChild(ln(cx,yHi,cx,yq3,1,0.8));                       // upper whisker
+        grp.appendChild(ln(cx,yq1,cx,yLo,1,0.8));                       // lower whisker
+        grp.appendChild(ln(cx-w*0.28,yHi,cx+w*0.28,yHi,1,0.8));         // caps
+        grp.appendChild(ln(cx-w*0.28,yLo,cx+w*0.28,yLo,1,0.8));
+        grp.appendChild(el("rect",{x:cx-w/2,y:Math.min(yq1,yq3),width:w,
+          height:Math.max(Math.abs(yq1-yq3),1),fill:g.color,"fill-opacity":0.16,
+          stroke:g.color,"stroke-width":1,"stroke-opacity":0.85}));
+        grp.appendChild(ln(cx-w/2,ymd,cx+w/2,ymd,2,1));                 // median
+        svg.appendChild(grp);
+      });
+    });
+  }
+  if(over||under||cutN||showBox){
     const bits=[];
+    if(showBox) bits.push(`▭ box = Q1–Q3 · line = median · whiskers = 1.5×IQR`);
+    if(showBox && boxSkipped) bits.push(`${boxSkipped} test day(s) had under 5 cows — no box drawn`);
     if(cutN) bits.push(`✂ Trim outlier ${cutN} points`);
     if(over) bits.push(`↑ ${over} dots above the top of the axis (max ${fmtN(overMax,opts.dec||0)})`);
     if(under) bits.push(`↓ ${under} dots below the axis`);
@@ -1230,6 +1362,31 @@ function scatterXY(host, pts, opts={}){
     svg.appendChild(el("line",{x1:X(v),x2:X(v),y1:PAD.t,y2:H-PAD.b,stroke:"var(--grid)","stroke-width":1}));
     const t=el("text",{x:X(v),y:H-PAD.b+17,"text-anchor":"middle",fill:"var(--muted)","font-size":11});
     t.textContent=fmtN(v,opts.xdec??0); svg.appendChild(t); });
+  // Named zones, tinted behind the dots. The point of this chart is that where a
+  // dot sits IS the diagnosis, so the diagnosis is written in the region itself
+  // rather than left in a legend the reader has to hold in their head.
+  (opts.zones||[]).forEach(z=>{
+    const x0=X(Math.max(z.x0??xlo,xlo)), x1=X(Math.min(z.x1??xhi,xhi));
+    const yB=Y(Math.max(z.y0??ylo,ylo)), yT=Y(Math.min(z.y1??yhi,yhi));
+    const w=x1-x0, h=yB-yT;
+    if(!(w>1&&h>1)) return;
+    svg.appendChild(el("rect",{x:x0,y:yT,width:w,height:h,fill:`var(${z.tone})`,
+      "fill-opacity":0.07,"pointer-events":"none"}));
+    if(w<70) return;                                   // too narrow to letter
+    // Top zones sit clear of the "10"/"16" reference-line labels; bottom zones
+    // letter along their floor, away from the dense band around the median.
+    const bot = z.anchor==="bottom";
+    const ly  = bot ? yB-(z.sub?20:8) : yT+29;
+    if(h<30) return;
+    const t=el("text",{x:x0+7,y:ly,fill:`var(${z.tone})`,"font-size":10.5,
+      "font-weight":"600","pointer-events":"none"});
+    t.textContent=z.label; svg.appendChild(t);
+    if(z.sub && h>44){
+      const t2=el("text",{x:x0+7,y:ly+13,fill:"var(--text-secondary)","font-size":9.5,
+        "pointer-events":"none"});
+      t2.textContent=z.sub; svg.appendChild(t2);
+    }
+  });
   (opts.xrefs||[]).forEach(r=>{
     svg.appendChild(el("line",{x1:X(r.v),x2:X(r.v),y1:PAD.t,y2:H-PAD.b,stroke:"var(--muted)",
       "stroke-width":1,"stroke-dasharray":"4 4"}));
@@ -1816,14 +1973,35 @@ function render(){
         c=card("mun","MUN against milk protein — interpreting the protein balance of the ration",
           "one dot is one sample, coloured by feeding group · The y-axis is milk protein, the x-axis is MUN · "+
           "the vertical dashed lines are the optimal range 10–16 mg/dl; the horizontal dashed line is the herd median protein ("+fmtN(pMed,2)+"%) · "+
-          "<b>How to read</b> — MUN high together with milk protein <b>not falling</b> means more rumen-degradable protein (RDP) than needed "+
-          "rumen microbes do not capture all the nitrogen into microbial protein; the excess is excreted as urea, wasting both energy and money · "+
-          "MUN high together with protein <b>falls</b> means a shortage of fermentable rumen energy, not excess protein · "+
-          "MUN low together with falling protein means the ration really is short of protein · Click a dot to open that cow's details",
+          "<b>How to read</b> — the six shaded zones carry the verdict, so where a dot sits is the diagnosis · "+
+          "MUN is nitrogen the cow <b>wasted</b> as urea, milk protein is nitrogen she <b>captured</b> — reading them together "+
+          "separates two problems that look identical from MUN alone: high MUN with protein holding up is <b>too much degradable protein</b>, "+
+          "while high MUN with protein falling is <b>too little fermentable energy</b> for the microbes to use the nitrogen. "+
+          "Those need opposite fixes — feeding more protein to an energy-short rumen makes it worse · "+
+          "the horizontal line is this herd's own median, so about half the samples fall below it by construction; "+
+          "treat the zones as relative, not as a nutritional pass/fail · Click a dot to open that cow's details",
           GRP_LEG(), MV);
         grid.appendChild(c);
+        // The count goes in the label: a zone's area says nothing about how many
+        // cows are in it, and the two red zones on the right are large but nearly
+        // empty. Without the n they read as a bigger problem than they are.
+        const zn=(fx,fy)=>{const k=q(fx,fy);
+          return ` — ${k} (${(k/pts.length*100).toFixed(1)}%)`;};
+        const ZONES=[
+          {x0:null, x1:MUNLO, y0:pMed, y1:null, tone:"--good",
+           label:"Efficient N use"+zn(loM,hiP), sub:"little wasted, protein holding up"},
+          {x0:MUNLO,x1:MUNHI, y0:pMed, y1:null, tone:"--good",
+           label:"Balanced — target"+zn(okM,hiP), sub:"nitrogen use about right"},
+          {x0:MUNHI,x1:null,  y0:pMed, y1:null, tone:"--critical",
+           label:"RDP excess"+zn(hiM,hiP), sub:"cut degradable protein"},
+          {x0:null, x1:MUNLO, y0:null, y1:pMed, tone:"--serious",
+           anchor:"bottom", label:"Short of protein"+zn(loM,loP), sub:"ration needs more RDP"},
+          {x0:MUNLO,x1:MUNHI, y0:null, y1:pMed, tone:"--warning",
+           anchor:"bottom", label:"Protein adequate — check energy"+zn(okM,loP), sub:""},
+          {x0:MUNHI,x1:null,  y0:null, y1:pMed, tone:"--critical",
+           anchor:"bottom", label:"Rumen energy short"+zn(hiM,loP), sub:"add fermentable energy, not protein"}];
         scatterXY(c.querySelector(".plot"),pts,
-          {xlab:"MUN (mg/dl)", ylab:"Milk protein (%)", xdec:0, ydec:2,
+          {xlab:"MUN (mg/dl)", ylab:"Milk protein (%)", xdec:0, ydec:2, zones:ZONES,
            xrefs:[{v:MUNLO,label:String(MUNLO)},{v:MUNHI,label:String(MUNHI)}],
            yrefs:[{v:pMed,label:"Median "+fmtN(pMed,2)+"%"}]});
         c.querySelector(".tv").innerHTML=tbl(
@@ -2007,6 +2185,65 @@ function render(){
 
     // Three questions about the same 79 isolates — what grew, what it was sensitive
     // to, and whether the drug actually given matched. Same bar form, so one card.
+
+    if(show("epi")){
+      const EV = ["LNIR — new infections in lactation","CML / CMDP — clinical rates"];
+      const vi = Math.min(viewOf("epi"), EV.length-1);
+      const E = epiModel(), P = E.sel;
+      const cats = P.map(p=>TH_ABBR[p.m]);
+      const full = P.map(p=>TH_M[p.m]+" 2569");
+      const lowN = P.some(p=>p.N.d>0 && p.N.d<EPI_MINN) || P.some(p=>p.U.d>0 && p.U.d<EPI_MINN);
+      c=card("epi","Mastitis epidemiology — LNIR · DPNIR · DPCURE · CML · CMDP",
+        "the five standard udder-health rates, recomputed live from the SCC threshold above · "+
+        "<b>LNIR</b> is the share of previously uninfected cows that crossed the threshold at the next "+
+        "recording · <b>DPNIR</b> and <b>DPCURE</b> compare the last recording before drying-off with the "+
+        "first inside 30 days after calving (>400 counts as infected within 5 days of calving) · "+
+        "<b>CML</b> and <b>CMDP</b> count first cases per lactation at DIM 31–305 and DIM &lt;31 · "+
+        "rates are computed across every test day and only then filtered to the months you picked, "+
+        "because cutting the series by month would invent a new infection at each boundary"+
+        " · <b>DPNIR and DPCURE are in the table only, not the chart</b>: most months rest on a "+
+        "single cow, so one animal reads as 0% or 100% and would flatten the LNIR line"+
+        (lowN?" — their n is printed beside every value":""),
+        vi===0
+          ? lg("var(--s1)","LNIR % (target <5)")
+          : lg("var(--critical)","CML /100 cows/yr (target <16.66)")+lg("var(--warning)","CMDP /100 cows/yr (target <8.33)"),
+        EV);
+      grid.appendChild(c);
+      // DPNIR/DPCURE are deliberately NOT plotted. With n=1 in most months a single
+      // cow reads as 100%, which pins the axis at 100 and flattens LNIR into a
+      // straight line. They stay in the table, where their n is visible beside them.
+      if(vi===0){
+        lineChart(c.querySelector(".plot"),cats,
+          [{name:"LNIR %", color:"var(--s1)", data:P.map(p=>p.lnir)}],
+          {dec:1, full, zero:true, refs:[{v:5,label:"LNIR target 5%"}]});
+      } else {
+        lineChart(c.querySelector(".plot"),cats,
+          [{name:"CML",  color:"var(--critical)", data:P.map(p=>p.cmlR)},
+           {name:"CMDP", color:"var(--warning)",  data:P.map(p=>p.cmdpR)}],
+          {dec:1, full, zero:true, refs:[{v:16.66,label:"CML target 16.66"},{v:8.33,label:"CMDP target 8.33"}]});
+      }
+      const n1=(v,d)=>v==null?"—":fmtN(v,d);
+      const flag=o=>o.d===0?"":(o.d<EPI_MINN?` <span style="color:var(--warning)">n low</span>`:"");
+      const T0=(a,b)=>({d:a.d+b.d,n:a.n+b.n});
+      const sum=k=>P.reduce((o,p)=>T0(o,p[k]),{d:0,n:0});
+      const L=sum("L"), N=sum("N"), U=sum("U");
+      const cowsAvg = P.length? P.reduce((a,p)=>a+p.cows,0)/P.length : 0;
+      const cmlT=P.reduce((a,p)=>a+p.cml,0), cmdpT=P.reduce((a,p)=>a+p.cmdp,0);
+      const rate=(n,c)=>c? n/c*100*12/Math.max(1,P.length) : null;
+      c.querySelector(".tv").innerHTML=tbl(
+        ["Month","LNIR %","new / at risk","DPNIR %","new / at risk","DPCURE %","cured / infected",
+         "Cows tested","CML cases","CML /100/yr","CMDP cases","CMDP /100/yr"],
+        P.map(p=>[TH_M[p.m], n1(p.lnir,1), `${p.L.n} / ${p.L.d}`,
+                  n1(p.dpn,1)+flag(p.N), `${p.N.n} / ${p.N.d}`,
+                  n1(p.dpc,1)+flag(p.U), `${p.U.n} / ${p.U.d}`,
+                  n1(p.cows,0), p.cml, n1(p.cmlR,1), p.cmdp, n1(p.cmdpR,1)])
+        .concat([["<b>Whole period</b>",
+                  `<b>${n1(L.d?L.n/L.d*100:null,1)}</b>`, `<b>${L.n} / ${L.d}</b>`,
+                  `<b>${n1(N.d?N.n/N.d*100:null,1)}</b>`+flag(N), `<b>${N.n} / ${N.d}</b>`,
+                  `<b>${n1(U.d?U.n/U.d*100:null,1)}</b>`+flag(U), `<b>${U.n} / ${U.d}</b>`,
+                  `<b>${n1(cowsAvg,0)}</b>`, `<b>${cmlT}</b>`, `<b>${n1(rate(cmlT,cowsAvg),1)}</b>`,
+                  `<b>${cmdpT}</b>`, `<b>${n1(rate(cmdpT,cowsAvg),1)}</b>`]]));
+    }
     if(show("cult")){
       const KV=["Pathogen (clin/sub)","Susceptibility, by organism","Concordance"];
       const vi=Math.min(viewOf("cult"),KV.length-1);
@@ -2356,11 +2593,13 @@ function readThr(){ const a=+thS.value, b=+thV.value, w=+thW.value;
 document.getElementById("reset").addEventListener("click",()=>{
   sel=new Set(MONTHS); thSub=200; thSev=500; thWin=14;
   thS.value=200; thV.value=500; thW.value=14; query="";
-  sortKey="meanScc"; sortDir=-1; showDots=true; expanded=null; cutOut=false; ovShown.clear();
+  sortKey="meanScc"; sortDir=-1; showDots=true; showBox=false; expanded=null; cutOut=false; ovShown.clear();
   tab="milk"; views.clear(); hiddenSeries.clear(); seedHidden(); openTables.clear(); selCow=null;
   document.getElementById("dots").checked=true;
+  document.getElementById("box").checked=false;
   paint(); render(); });
 document.getElementById("dots").addEventListener("change",e=>{ showDots=e.target.checked; render(); });
+document.getElementById("box").addEventListener("change",e=>{ showBox=e.target.checked; render(); });
 document.getElementById("back").addEventListener("click",()=>{ expanded=null; render(); });
 document.addEventListener("keydown",e=>{ if(e.key==="Escape" && expanded){ expanded=null; render(); } });
 const tbtn=document.getElementById("theme");
