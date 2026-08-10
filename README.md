@@ -2,7 +2,7 @@
 
 แดชบอร์ดคุณภาพน้ำนมดิบ ฟาร์มโคนมเพื่อการวิจัย จุฬาลงกรณ์มหาวิทยาลัย ปี 2569
 
-**เปิดดูแดชบอร์ด → https://USERNAME.github.io/REPO/**
+**เปิดดูแดชบอร์ด → https://sirawit-leo.github.io/cu-dairy-dashboard/**
 
 *(แก้ USERNAME กับ REPO ให้ตรงกับของจริงหลังสร้าง repo แล้ว)*
 
