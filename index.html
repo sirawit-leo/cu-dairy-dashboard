@@ -164,7 +164,7 @@ svg{display:block;width:100%;height:auto;overflow:visible}
   .brandrow{gap:10px}
   /* on a phone the rectangle stacks: text first, logo and byline under it */
   .notice{flex-direction:column;gap:12px;align-items:center;padding:13px 14px}
-  .noticetext{font-size:11.5px}
+  .noticetext{font-size:10.5px;text-align:left}
   .notice .brand{height:60px}
   .foot{font-size:12px;line-height:1.65}
   .grid{grid-template-columns:1fr;gap:12px}
@@ -221,7 +221,15 @@ tbody tr:hover{background:color-mix(in srgb,var(--text-primary) 4%,transparent)}
 .notice{display:flex;gap:22px;align-items:center;justify-content:space-between;
   border:1px solid var(--border);border-radius:10px;padding:14px 18px;
   background:var(--surface-1)}
-.noticetext{min-width:0;flex:1 1 auto;margin:0;font-size:11.5px;line-height:1.6}
+/* The notice keeps its full wording. It is set small in a serif instead — the whole
+   text at 10.5px Times fits a block of roughly the same height as the logo block,
+   where cutting words was the wrong trade. */
+.noticetext{min-width:0;flex:1 1 auto;margin:0;
+  font-family:"Times New Roman",Times,Georgia,"Noto Serif Thai",serif;
+  font-size:10.5px;line-height:1.45;text-align:justify;hyphens:auto}
+.noticetext p{margin:0 0 4px}
+.noticetext p:last-child{margin-bottom:0}
+.noticehead{font-weight:700;font-size:11.5px;letter-spacing:.01em;color:var(--text-primary)}
 .footbrand{flex:none;display:flex;flex-direction:column;align-items:center;gap:5px}
 .byline{font-size:11px;color:var(--text-secondary);letter-spacing:.02em}
 @media (min-width:641px){ .notice .brand{height:74px} }
@@ -287,13 +295,35 @@ tbody tr:hover{background:color-mix(in srgb,var(--text-primary) 4%,transparent)}
 
 <div class="foot">
   <div class="notice">
-    <p class="noticetext"><b>For academic discussion and presentation only — not for sale or redistribution.</b>
-      Data collected by staff of the <b>Chula Dairy Research Farm, Faculty of Veterinary Science, Chulalongkorn
-      University</b>, production year 2026, and belonging to the farm and the Faculty. Made available to
-      <b>Sirawit Chaikwan</b> for academic discussion and presentation only; the author holds no rights in the data and
-      <b>cannot grant permission for its use</b> — requests go to the farm and the Faculty. Cow-level records must not
-      be extracted or republished. Values marked <b>≈</b> are estimated, not measured. Not a substitute for veterinary
-      judgement.</p>
+    <div class="noticetext">
+      <p class="noticehead">For academic discussion and presentation only — not for sale or redistribution</p>
+      <p>The data presented here were collected by the staff of the <b>Chula Dairy Research Farm, Faculty of Veterinary
+       Science, Chulalongkorn University</b>, in the course of their routine work on the herd, and cover production
+       year <b>2026</b>.</p>
+      <p><b>The data belong to the farm and the Faculty.</b> They were made available to <b>Sirawit Chaikwan</b> for
+       academic discussion and presentation, and for no other purpose. The author claims no ownership of and no rights
+       in the data; this page is a presentation of records that belong to the farm, not a dataset of the author's own.</p>
+      <p>This page exists for academic discussion and presentation. It may be read, shown and cited for those purposes.
+       <b>It may not be sold, redistributed, republished or used for any commercial purpose</b>, in whole or in part, and
+       it may not be incorporated into any commercial product, service or dataset.</p>
+      <p>These records describe individual animals in a working research herd. <b>Cow identifiers, health events,
+       treatment records and production figures must not be extracted, reused or republished outside this context.</b>
+       Anyone wishing to cite these figures, reproduce a chart, or work with the underlying data <b>must contact the
+       Chula Dairy Research Farm and the Faculty of Veterinary Science, Chulalongkorn University. The author cannot
+       grant permission for any use of the data.</b></p>
+      <p><b>Read the figures with their limits in view.</b> The herd's automatic recording system failed between
+       <b>27 April and 16 July 2026</b>; no per-cow milk yield or body weight was recorded in that window, and weight
+       recording never resumed. Values spanning that gap are <b>estimated and marked ≈</b> — typical error around
+       2.6 kg/day for yield. Fifteen samples with uncountable SCC or physiologically impossible values are excluded from
+       every figure. <b>No treatment outcome is recorded anywhere in this dataset</b>, so nothing here evaluates whether
+       a treatment worked; every “cured” figure is an SCC crossing between two tests roughly a fortnight apart. The
+       record covers eight months of a single production year, so no seasonal effect can be separated from a one-off
+       management change. Groups shown by parity or by pen can be small — read counts rather than rates wherever a group
+       falls below about twenty animals.</p>
+      <p>Figures are provided for academic discussion. They are <b>not a substitute for veterinary judgement</b> and
+       should not be used alone to make decisions about an individual animal. No warranty is given as to completeness or
+       fitness for any particular purpose.</p>
+    </div>
     <div class="footbrand">
       <a class="logolink" href="https://github.com/sirawit-leo/cu-dairy-dashboard" target="_blank" rel="noopener noreferrer"
          title="View this dashboard on GitHub" aria-label="View this dashboard on GitHub">
