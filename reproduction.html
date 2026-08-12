@@ -267,6 +267,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--text-primary) 4%,transparent)}
   <button class="btn" id="theme" aria-label="Switch colour theme">Dark</button>
 </header>
 
+<button class="btn" id="back" style="display:none;margin-bottom:14px">⤡ Close zoom (Esc)</button>
 <div class="tiles" id="tiles"></div>
 <div class="grid" id="grid"></div>
 
@@ -288,156 +289,173 @@ tbody tr:hover{background:color-mix(in srgb,var(--text-primary) 4%,transparent)}
 </div>
 </div>
 <script>
-const D = {"chain":[{"cow":"251005","calving":"2026-06-23","service":"2025-09-10","pd":"2025-11-23","gest":286,"s2p":74},{"cow":"51001","calving":"2026-07-01","service":null,"pd":null,"gest":null,"s2p":null},{"cow":"51008","calving":"2025-09-09","service":"2024-12-06","pd":"2025-01-26","gest":277,"s2p":51},{"cow":"51009","calving":"2025-11-18","service":"2025-02-20","pd":"2025-03-23","gest":271,"s2p":31},{"cow":"51104","calving":"2025-10-21","service":"2025-01-21","pd":"2025-02-23","gest":273,"s2p":33},{"cow":"51122","calving":"2026-02-14","service":"2025-05-18","pd":"2025-07-17","gest":272,"s2p":60},{"cow":"60102","calving":"2025-10-29","service":"2025-02-05","pd":null,"gest":266,"s2p":null},{"cow":"60107","calving":"2025-12-18","service":"2025-03-13","pd":"2025-04-20","gest":280,"s2p":38},{"cow":"60522","calving":"2025-11-19","service":"2025-02-16","pd":"2025-03-23","gest":276,"s2p":35},{"cow":"60909","calving":"2025-11-15","service":"2025-02-11","pd":"2025-03-23","gest":277,"s2p":40},{"cow":"61008","calving":"2025-09-18","service":"2024-12-18","pd":"2025-01-26","gest":274,"s2p":39},{"cow":"61010","calving":"2026-01-27","service":"2025-05-01","pd":"2025-07-07","gest":271,"s2p":67},{"cow":"61028","calving":"2026-01-16","service":"2025-04-08","pd":"2025-05-29","gest":283,"s2p":51},{"cow":"61108","calving":"2026-01-23","service":"2025-04-27","pd":null,"gest":271,"s2p":null},{"cow":"61121","calving":"2026-02-14","service":"2025-05-13","pd":"2025-07-07","gest":277,"s2p":55},{"cow":"61122","calving":"2025-11-28","service":"2025-02-22","pd":"2025-03-25","gest":279,"s2p":31},{"cow":"61124","calving":"2025-12-24","service":"2025-03-24","pd":null,"gest":275,"s2p":null},{"cow":"61125","calving":"2025-10-19","service":"2025-01-14","pd":"2025-02-21","gest":278,"s2p":38},{"cow":"61204","calving":"2026-05-06","service":"2025-07-23","pd":"2025-10-15","gest":287,"s2p":84},{"cow":"61208","calving":"2025-10-13","service":"2025-01-15","pd":"2025-02-21","gest":271,"s2p":37},{"cow":"61219","calving":"2026-01-17","service":"2025-04-07","pd":"2025-05-06","gest":285,"s2p":29},{"cow":"6404","calving":"2026-04-15","service":"2025-07-20","pd":"2025-09-16","gest":269,"s2p":58},{"cow":"6406","calving":"2025-12-06","service":null,"pd":null,"gest":null,"s2p":null},{"cow":"6406","calving":"2026-05-18","service":"2025-08-17","pd":"2025-09-18","gest":274,"s2p":32},{"cow":"6408","calving":"2026-06-30","service":"2025-09-25","pd":"2025-11-18","gest":278,"s2p":54},{"cow":"6413","calving":"2025-10-02","service":null,"pd":null,"gest":null,"s2p":null},{"cow":"6413","calving":"2026-01-02","service":"2025-04-27","pd":null,"gest":250,"s2p":null},{"cow":"6415","calving":"2026-02-15","service":"2025-05-11","pd":"2025-07-17","gest":280,"s2p":67},{"cow":"6502","calving":"2025-11-15","service":"2025-02-20","pd":"2025-03-23","gest":268,"s2p":31},{"cow":"70101","calving":"2026-02-02","service":"2025-04-30","pd":"2025-06-04","gest":278,"s2p":35},{"cow":"70117","calving":"2026-01-13","service":"2025-04-12","pd":"2025-05-29","gest":276,"s2p":47},{"cow":"70131","calving":"2025-12-21","service":"2025-03-22","pd":"2025-04-22","gest":274,"s2p":31},{"cow":"70132","calving":"2025-12-25","service":"2025-03-24","pd":"2025-05-06","gest":276,"s2p":43},{"cow":"70202","calving":"2026-07-28","service":"2025-11-24","pd":"2026-01-23","gest":246,"s2p":60},{"cow":"70212","calving":"2026-02-25","service":"2025-06-01","pd":"2025-07-07","gest":269,"s2p":36},{"cow":"70301","calving":"2026-01-27","service":"2025-05-01","pd":"2025-07-07","gest":271,"s2p":67},{"cow":"70302","calving":"2026-01-22","service":"2025-04-20","pd":null,"gest":277,"s2p":null},{"cow":"70323","calving":"2026-03-20","service":"2025-06-19","pd":"2025-07-20","gest":274,"s2p":31},{"cow":"70327","calving":"2026-06-26","service":"2025-09-27","pd":null,"gest":272,"s2p":null},{"cow":"70401","calving":"2026-02-26","service":"2025-05-21","pd":"2025-07-07","gest":281,"s2p":47},{"cow":"70609","calving":"2026-05-16","service":"2025-08-24","pd":"2025-09-30","gest":265,"s2p":37},{"cow":"70913","calving":"2026-03-08","service":null,"pd":null,"gest":null,"s2p":null},{"cow":"741202","calving":"2025-09-19","service":"2024-12-19","pd":null,"gest":274,"s2p":null},{"cow":"750302","calving":"2026-06-25","service":"2025-09-24","pd":null,"gest":274,"s2p":null},{"cow":"750303","calving":"2026-02-14","service":"2025-05-06","pd":"2025-06-06","gest":284,"s2p":31},{"cow":"750304","calving":"2025-10-06","service":null,"pd":null,"gest":null,"s2p":null},{"cow":"750312","calving":"2025-11-07","service":null,"pd":null,"gest":null,"s2p":null},{"cow":"750312","calving":"2026-06-30","service":"2025-09-21","pd":"2025-11-18","gest":282,"s2p":58},{"cow":"750502","calving":"2026-03-17","service":"2025-06-17","pd":"2025-07-20","gest":273,"s2p":33},{"cow":"750513","calving":"2025-09-09","service":"2024-12-06","pd":"2025-01-26","gest":277,"s2p":51},{"cow":"7819","calving":"2025-11-12","service":"2025-02-01","pd":null,"gest":284,"s2p":null},{"cow":"7837","calving":"2026-02-21","service":"2025-05-27","pd":"2025-08-07","gest":270,"s2p":72},{"cow":"7841","calving":"2026-04-07","service":"2025-06-17","pd":null,"gest":294,"s2p":null},{"cow":"7854","calving":"2025-08-31","service":"2024-11-28","pd":"2024-12-29","gest":276,"s2p":31},{"cow":"7865","calving":"2026-04-07","service":null,"pd":null,"gest":null,"s2p":null},{"cow":"7876","calving":"2025-11-20","service":"2025-02-20","pd":"2025-03-23","gest":273,"s2p":31}],"monthly":[{"m":"2025-08","service":14,"conception":3,"calving":1},{"m":"2025-09","service":15,"conception":13,"calving":4},{"m":"2025-10","service":8,"conception":3,"calving":6},{"m":"2025-11","service":16,"conception":5,"calving":8},{"m":"2025-12","service":19,"conception":6,"calving":5},{"m":"2026-01","service":14,"conception":9,"calving":8},{"m":"2026-02","service":20,"conception":7,"calving":8},{"m":"2026-03","service":21,"conception":10,"calving":3},{"m":"2026-04","service":18,"conception":4,"calving":3},{"m":"2026-05","service":12,"conception":2,"calving":3},{"m":"2026-06","service":11,"conception":11,"calving":5},{"m":"2026-07","service":20,"conception":0,"calving":2},{"m":"2026-08","service":0,"conception":0,"calving":0}],"stats":{"calvings":56,"services":188,"conceptions":73,"withService":49,"withPD":39,"gestMed":275,"gestMin":246,"gestMax":294,"gestN":49,"pdMed":39,"pdMin":29,"pdMax":84,"pdN":39,"cows":53}};
+const D = {"chain":[{"cow":"251005","calving":"2026-06-23","service":"2025-09-10","pd":"2025-11-23","gest":286,"s2p":74},{"cow":"51001","calving":"2026-07-01","service":null,"pd":null,"gest":null,"s2p":null},{"cow":"51008","calving":"2025-09-09","service":"2024-12-06","pd":"2025-01-26","gest":277,"s2p":51},{"cow":"51009","calving":"2025-11-18","service":"2025-02-20","pd":"2025-03-23","gest":271,"s2p":31},{"cow":"51104","calving":"2025-10-21","service":"2025-01-21","pd":"2025-02-23","gest":273,"s2p":33},{"cow":"51122","calving":"2026-02-14","service":"2025-05-18","pd":"2025-07-17","gest":272,"s2p":60},{"cow":"60102","calving":"2025-10-29","service":"2025-02-05","pd":null,"gest":266,"s2p":null},{"cow":"60107","calving":"2025-12-18","service":"2025-03-13","pd":"2025-04-20","gest":280,"s2p":38},{"cow":"60522","calving":"2025-11-19","service":"2025-02-16","pd":"2025-03-23","gest":276,"s2p":35},{"cow":"60909","calving":"2025-11-15","service":"2025-02-11","pd":"2025-03-23","gest":277,"s2p":40},{"cow":"61008","calving":"2025-09-18","service":"2024-12-18","pd":"2025-01-26","gest":274,"s2p":39},{"cow":"61010","calving":"2026-01-27","service":"2025-05-01","pd":"2025-07-07","gest":271,"s2p":67},{"cow":"61028","calving":"2026-01-16","service":"2025-04-08","pd":"2025-05-29","gest":283,"s2p":51},{"cow":"61108","calving":"2026-01-23","service":"2025-04-27","pd":null,"gest":271,"s2p":null},{"cow":"61121","calving":"2026-02-14","service":"2025-05-13","pd":"2025-07-07","gest":277,"s2p":55},{"cow":"61122","calving":"2025-11-28","service":"2025-02-22","pd":"2025-03-25","gest":279,"s2p":31},{"cow":"61124","calving":"2025-12-24","service":"2025-03-24","pd":null,"gest":275,"s2p":null},{"cow":"61125","calving":"2025-10-19","service":"2025-01-14","pd":"2025-02-21","gest":278,"s2p":38},{"cow":"61204","calving":"2026-05-06","service":"2025-07-23","pd":"2025-10-15","gest":287,"s2p":84},{"cow":"61208","calving":"2025-10-13","service":"2025-01-15","pd":"2025-02-21","gest":271,"s2p":37},{"cow":"61219","calving":"2026-01-17","service":"2025-04-07","pd":"2025-05-06","gest":285,"s2p":29},{"cow":"6404","calving":"2026-04-15","service":"2025-07-20","pd":"2025-09-16","gest":269,"s2p":58},{"cow":"6406","calving":"2025-12-06","service":null,"pd":null,"gest":null,"s2p":null},{"cow":"6406","calving":"2026-05-18","service":"2025-08-17","pd":"2025-09-18","gest":274,"s2p":32},{"cow":"6408","calving":"2026-06-30","service":"2025-09-25","pd":"2025-11-18","gest":278,"s2p":54},{"cow":"6413","calving":"2025-10-02","service":null,"pd":null,"gest":null,"s2p":null},{"cow":"6413","calving":"2026-01-02","service":"2025-04-27","pd":null,"gest":250,"s2p":null},{"cow":"6415","calving":"2026-02-15","service":"2025-05-11","pd":"2025-07-17","gest":280,"s2p":67},{"cow":"6502","calving":"2025-11-15","service":"2025-02-20","pd":"2025-03-23","gest":268,"s2p":31},{"cow":"70101","calving":"2026-02-02","service":"2025-04-30","pd":"2025-06-04","gest":278,"s2p":35},{"cow":"70117","calving":"2026-01-13","service":"2025-04-12","pd":"2025-05-29","gest":276,"s2p":47},{"cow":"70131","calving":"2025-12-21","service":"2025-03-22","pd":"2025-04-22","gest":274,"s2p":31},{"cow":"70132","calving":"2025-12-25","service":"2025-03-24","pd":"2025-05-06","gest":276,"s2p":43},{"cow":"70202","calving":"2026-07-28","service":"2025-11-24","pd":"2026-01-23","gest":246,"s2p":60},{"cow":"70212","calving":"2026-02-25","service":"2025-06-01","pd":"2025-07-07","gest":269,"s2p":36},{"cow":"70301","calving":"2026-01-27","service":"2025-05-01","pd":"2025-07-07","gest":271,"s2p":67},{"cow":"70302","calving":"2026-01-22","service":"2025-04-20","pd":null,"gest":277,"s2p":null},{"cow":"70323","calving":"2026-03-20","service":"2025-06-19","pd":"2025-07-20","gest":274,"s2p":31},{"cow":"70327","calving":"2026-06-26","service":"2025-09-27","pd":null,"gest":272,"s2p":null},{"cow":"70401","calving":"2026-02-26","service":"2025-05-21","pd":"2025-07-07","gest":281,"s2p":47},{"cow":"70609","calving":"2026-05-16","service":"2025-08-24","pd":"2025-09-30","gest":265,"s2p":37},{"cow":"70913","calving":"2026-03-08","service":null,"pd":null,"gest":null,"s2p":null},{"cow":"741202","calving":"2025-09-19","service":"2024-12-19","pd":null,"gest":274,"s2p":null},{"cow":"750302","calving":"2026-06-25","service":"2025-09-24","pd":null,"gest":274,"s2p":null},{"cow":"750303","calving":"2026-02-14","service":"2025-05-06","pd":"2025-06-06","gest":284,"s2p":31},{"cow":"750304","calving":"2025-10-06","service":null,"pd":null,"gest":null,"s2p":null},{"cow":"750312","calving":"2025-11-07","service":null,"pd":null,"gest":null,"s2p":null},{"cow":"750312","calving":"2026-06-30","service":"2025-09-21","pd":"2025-11-18","gest":282,"s2p":58},{"cow":"750502","calving":"2026-03-17","service":"2025-06-17","pd":"2025-07-20","gest":273,"s2p":33},{"cow":"750513","calving":"2025-09-09","service":"2024-12-06","pd":"2025-01-26","gest":277,"s2p":51},{"cow":"7819","calving":"2025-11-12","service":"2025-02-01","pd":null,"gest":284,"s2p":null},{"cow":"7837","calving":"2026-02-21","service":"2025-05-27","pd":"2025-08-07","gest":270,"s2p":72},{"cow":"7841","calving":"2026-04-07","service":"2025-06-17","pd":null,"gest":294,"s2p":null},{"cow":"7854","calving":"2025-08-31","service":"2024-11-28","pd":"2024-12-29","gest":276,"s2p":31},{"cow":"7865","calving":"2026-04-07","service":null,"pd":null,"gest":null,"s2p":null},{"cow":"7876","calving":"2025-11-20","service":"2025-02-20","pd":"2025-03-23","gest":273,"s2p":31}],"monthly":[{"m":"2025-08","service":14,"conception":3,"calving":1},{"m":"2025-09","service":15,"conception":13,"calving":4},{"m":"2025-10","service":8,"conception":3,"calving":6},{"m":"2025-11","service":16,"conception":5,"calving":8},{"m":"2025-12","service":19,"conception":6,"calving":5},{"m":"2026-01","service":14,"conception":9,"calving":8},{"m":"2026-02","service":20,"conception":7,"calving":8},{"m":"2026-03","service":21,"conception":10,"calving":3},{"m":"2026-04","service":18,"conception":4,"calving":3},{"m":"2026-05","service":12,"conception":2,"calving":3},{"m":"2026-06","service":11,"conception":11,"calving":5},{"m":"2026-07","service":20,"conception":0,"calving":2},{"m":"2026-08","service":0,"conception":0,"calving":0}],"stats":{"calvings":56,"services":188,"conceptions":73,"withService":49,"withPD":39,"gestMed":275,"gestMin":246,"gestMax":294,"gestN":49,"pdMed":39,"pdMin":29,"pdMax":84,"pdN":39,"cows":53},"cohort":{"shiftDays":275,"months":["2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08"],"servicesShifted":[18,16,21,22,20,18,12,7,7,14,15,8,16],"calvings":[1,4,6,8,5,8,8,3,3,3,5,2,0],"traced":[1,4,4,7,4,8,8,2,2,3,5,1,0],"insTotal":503}};
 
-// ---- shared helpers, same conventions as index.html -------------------------
-const W = 680, H = 300, PAD = {l:44, r:20, t:18, b:34};
-const el = (n, a={}) => { const e = document.createElementNS("http://www.w3.org/2000/svg", n);
-  for (const k in a) e.setAttribute(k, a[k]); return e; };
+// ---- state ------------------------------------------------------------------
+let expanded = null;                 // key of the zoomed card, or null
+let W = 680, H = 300;
+const PAD = {l:44, r:20, t:18, b:34};
+const show = k => !expanded || expanded === k;
+
+const el = (n,a={}) => { const e=document.createElementNS("http://www.w3.org/2000/svg",n);
+  for(const k in a) e.setAttribute(k,a[k]); return e; };
 const fmtN = (v,d=0) => v==null||!isFinite(v) ? "—"
   : v.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
 const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-// dates arrive as YYYY-MM-DD; show them the way a vet would write one
+const label = m => { const [y,mm]=m.split("-"); return MON[+mm-1]+" "+y.slice(2); };
 const fmtD = s => { if(!s) return null; const [y,m,d]=s.split("-");
   return `${+d} ${MON[+m-1]} ${y.slice(2)}`; };
-const label = m => { const [y,mm]=m.split("-"); return MON[+mm-1]+" "+y.slice(2); };
 const SER = [
   {k:"service",    name:"Service (insemination)", color:"var(--s1)"},
   {k:"conception", name:"Conception (PD+)",       color:"var(--s3)"},
   {k:"calving",    name:"Calving",                color:"var(--s4)"}];
+const lg = (c,n) => `<span><i style="background:${c}"></i>${n}</span>`;
+const tbl = (h,r) => `<table><thead><tr>${h.map(x=>`<th>${x}</th>`).join("")}</tr></thead><tbody>${
+  r.map(x=>`<tr>${x.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
 
-function card(title, sub, legend){
-  const c = document.createElement("div"); c.className = "card";
+function card(key,title,sub,legend){
+  const on = expanded === key;
+  const c = document.createElement("div");
+  c.className = "card" + (on ? " expanded wide" : "");
   c.innerHTML = `<div class="chead"><h2 class="ctitle">${title}</h2>
-      <div class="cbtns"><button class="tgl">Table</button></div></div>
+      <div class="cbtns"><button class="tgl tb">Table</button>
+      <button class="tgl zoom">${on?"⤡ Close":"⤢ Zoom"}</button></div></div>
     <p class="csub">${sub}</p><div class="plot"></div>
     <div class="rlegend">${legend||""}</div><div class="tv"></div>`;
-  c.querySelector(".tgl").addEventListener("click", ()=>c.classList.toggle("table-on"));
+  c.querySelector(".tb").addEventListener("click",()=>c.classList.toggle("table-on"));
+  c.querySelector(".zoom").addEventListener("click",()=>{
+    expanded = on ? null : key; render(); window.scrollTo({top:0,behavior:"smooth"}); });
   return c;
 }
-const lg = (color,name) => `<span><i style="background:${color}"></i>${name}</span>`;
-function tbl(head, rows){
-  return `<table><thead><tr>${head.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${
-    rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
-}
-function axes(svg, cats, max){
-  const x = i => PAD.l + (W-PAD.l-PAD.r) * (cats.length<2?0.5:i/(cats.length-1));
-  const y = v => H-PAD.b - (H-PAD.t-PAD.b) * (v/max);
+function axes(svg,cats,max){
+  const x = i => PAD.l + (W-PAD.l-PAD.r)*(cats.length<2?0.5:i/(cats.length-1));
+  const y = v => H-PAD.b - (H-PAD.t-PAD.b)*(v/max);
   const step = max<=5?1:max<=12?2:max<=30?5:10;
   for(let v=0; v<=max; v+=step){
     svg.appendChild(el("line",{x1:PAD.l,y1:y(v),x2:W-PAD.r,y2:y(v),stroke:"var(--grid)","stroke-width":1}));
     const t=el("text",{x:PAD.l-7,y:y(v)+3.5,"text-anchor":"end",fill:"var(--muted)","font-size":10.5});
     t.textContent=v; svg.appendChild(t);
   }
-  cats.forEach((c,i)=>{ if(cats.length>8 && i%2) return;
+  const every = expanded ? 1 : 2;
+  cats.forEach((c,i)=>{ if(cats.length>8 && i%every) return;
     const t=el("text",{x:x(i),y:H-PAD.b+15,"text-anchor":"middle",fill:"var(--muted)","font-size":10.5});
     t.textContent=label(c); svg.appendChild(t); });
   return {x,y};
 }
+const line = (svg,pts,color,wd=2.2) => {
+  svg.appendChild(el("path",{d:"M"+pts.map(p=>p.join(" ")).join(" L "),
+    fill:"none",stroke:color,"stroke-width":wd,"stroke-linejoin":"round"}));
+  pts.forEach(p=>svg.appendChild(el("circle",{cx:p[0],cy:p[1],r:expanded?3.6:3,fill:color})));
+};
 
-// ---- 1. the three event streams, month by month -----------------------------
+// ---- 1. the three streams ---------------------------------------------------
 function monthlyChart(){
-  const m = D.monthly, cats = m.map(r=>r.m);
-  const max = Math.max(5, ...m.flatMap(r=>[r.service,r.conception,r.calving]));
-  const svg = el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img"});
-  const {x,y} = axes(svg, cats, max);
-  SER.forEach(s=>{
-    const pts = m.map((r,i)=>[x(i), y(r[s.k])]);
-    svg.appendChild(el("path",{d:"M"+pts.map(p=>p.join(" ")).join(" L "),
-      fill:"none",stroke:s.color,"stroke-width":2.2,"stroke-linejoin":"round"}));
-    pts.forEach(p=>svg.appendChild(el("circle",{cx:p[0],cy:p[1],r:3,fill:s.color})));
-  });
-  const c = card("Service, conception and calving by month",
-    "counts of each event in the window · <b>a service leads its calving by about nine months</b>, so the three "+
-    "lines are the same cows at three points in one cycle, not three independent things · "+
-    "conceptions in the last month are <b>right-censored</b> — a service in July is confirmed in August, outside "+
-    "this window · from the herd-evaluation workbook",
+  const m=D.monthly, cats=m.map(r=>r.m);
+  const max=Math.max(5,...m.flatMap(r=>[r.service,r.conception,r.calving]));
+  const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img"});
+  const {x,y}=axes(svg,cats,max);
+  SER.forEach(s=>line(svg,m.map((r,i)=>[x(i),y(r[s.k])]),s.color));
+  const c=card("monthly","Service, conception and calving by month",
+    "counts of each event in the window · these are three points in one cycle, not three independent things — "+
+    "the calvings here were caused by services about nine months earlier, <b>not by the services in the same "+
+    "column</b> · see the next card for the aligned view · conceptions in the final month are "+
+    "<b>right-censored</b>: a service in July is confirmed in August, outside this window",
     SER.map(s=>lg(s.color,s.name)).join(""));
   c.querySelector(".plot").appendChild(svg);
-  c.querySelector(".tv").innerHTML = tbl(["Month","Services","Conceptions","Calvings"],
-    m.map(r=>[label(r.m), r.service, r.conception, r.calving])
-     .concat([["<b>Total</b>", `<b>${D.stats.services}</b>`, `<b>${D.stats.conceptions}</b>`,
-               `<b>${D.stats.calvings}</b>`]]));
+  c.querySelector(".tv").innerHTML=tbl(["Month","Services","Conceptions","Calvings"],
+    m.map(r=>[label(r.m),r.service,r.conception,r.calving]).concat([["<b>Total</b>",
+      `<b>${D.stats.services}</b>`,`<b>${D.stats.conceptions}</b>`,`<b>${D.stats.calvings}</b>`]]));
   return c;
 }
 
-// ---- 2. does this month's service become next year's calving? ---------------
-function lagChart(){
-  const m = D.monthly, cats = m.map(r=>r.m);
-  const max = Math.max(5, ...m.map(r=>Math.max(r.service,r.calving)));
-  const svg = el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img"});
-  const {x,y} = axes(svg, cats, max);
-  // services drawn as bars, calvings as a line, so the ~9-month offset is visible
-  const bw = (W-PAD.l-PAD.r)/cats.length*0.55;
-  m.forEach((r,i)=>{ if(!r.service) return;
-    svg.appendChild(el("rect",{x:x(i)-bw/2, y:y(r.service), width:bw, height:(H-PAD.b)-y(r.service),
-      fill:"var(--s1)", opacity:.45, rx:2})); });
-  const pts = m.map((r,i)=>[x(i), y(r.calving)]);
-  svg.appendChild(el("path",{d:"M"+pts.map(p=>p.join(" ")).join(" L "),
-    fill:"none",stroke:"var(--s4)","stroke-width":2.4}));
-  pts.forEach(p=>svg.appendChild(el("circle",{cx:p[0],cy:p[1],r:3.2,fill:"var(--s4)"})));
-  const c = card("Services against calvings, same axis",
-    "the same two series overlaid so the lag is visible: <b>services (bars) precede the calvings they cause by "+
-    "roughly 275 days</b>, which is why the two do not rise and fall together · a month of heavy service should "+
-    "show as a calving peak nine months later, and the gap between them is where conception failure lives",
-    lg("var(--s1)","Services")+lg("var(--s4)","Calvings"));
+// ---- 2. each calving aligned with the service that caused it ----------------
+function cohortChart(){
+  const co=D.cohort, cats=co.months;
+  const max=Math.max(5,...co.servicesShifted,...co.calvings);
+  const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img"});
+  const {x,y}=axes(svg,cats,max);
+  const bw=(W-PAD.l-PAD.r)/cats.length*0.55;
+  co.servicesShifted.forEach((v,i)=>{ if(!v) return;
+    svg.appendChild(el("rect",{x:x(i)-bw/2,y:y(v),width:bw,height:(H-PAD.b)-y(v),
+      fill:"var(--s1)",opacity:.4,rx:2})); });
+  line(svg,co.calvings.map((v,i)=>[x(i),y(v)]),"var(--s4)",2.4);
+  line(svg,co.traced.map((v,i)=>[x(i),y(v)]),"var(--s3)",1.8);
+  const due=co.servicesShifted.reduce((x,y)=>x+y,0), born=co.calvings.reduce((x,y)=>x+y,0);
+  const conv=(born/due*100).toFixed(0);
+  const c=card("cohort","Each calving against the service that caused it",
+    `every service is placed in the month it would be <b>due to calve</b> — its own date plus ${co.shiftDays} days, `+
+    `the herd's median gestation — so a bar and the calving line beneath it describe the same cows · `+
+    `<b>the gap between them is the loss</b>: services that never became a calving · across the window `+
+    `<b>${due} services were due to calve and ${born} calvings happened, about ${conv}%</b>, which is arrived at `+
+    `independently here and lands on the herd evaluation's own conception rate of 30.9% · the green line counts `+
+    `only calvings whose service was traced back within the same cow ID, so green below orange is a calving whose `+
+    `service could not be matched · <b>August 2026 is censored</b> — the window closes on the 4th`,
+    lg("var(--s1)","Services due to calve")+lg("var(--s4)","Calvings")+
+    lg("var(--s3)","Calvings traced to their own service"));
   c.querySelector(".plot").appendChild(svg);
-  c.querySelector(".tv").innerHTML = tbl(["Month","Services","Calvings"],
-    m.map(r=>[label(r.m), r.service, r.calving]));
+  c.querySelector(".tv").innerHTML=tbl(["Month","Services due to calve","Calvings","Traced to a service"],
+    cats.map((m,i)=>[label(m),co.servicesShifted[i],co.calvings[i],co.traced[i]]));
   return c;
 }
 
-// ---- 3. the reconstructed chain, one row per calving ------------------------
+// ---- 3. the chain, one row per calving --------------------------------------
 function chainCard(){
-  const rows = D.chain.slice().sort((a,b)=>a.calving<b.calving?-1:1);
-  const c = card("Every calving, traced back to its service",
-    `<b>${D.stats.calvings} calvings</b> in the window across ${D.stats.cows} cows · for each one, the service that `+
-    `produced it and the pregnancy check that confirmed it · <b>this chain is reconstructed, not recorded</b>: the `+
-    `source holds three separate event lists, so a service is matched by gestation window (±35 days around 280) and `+
-    `a conception by confirmation window (25–120 days after service) · the match is checked rather than assumed — `+
-    `it gives a <b>gestation median of ${D.stats.gestMed} days</b> (${D.stats.gestMin}–${D.stats.gestMax}, `+
-    `n=${D.stats.gestN}) and a <b>service-to-confirmation median of ${D.stats.pdMed} days</b> `+
-    `(${D.stats.pdMin}–${D.stats.pdMax}, n=${D.stats.pdN}), both biologically right · `+
-    `<b>${D.stats.calvings-D.stats.withService} calvings have no matching service and `+
-    `${D.stats.calvings-D.stats.withPD} no confirmed conception</b> — those cells are left blank, never filled in`);
-  const dash = v => v || `<span style="color:var(--muted)">—</span>`;
-  c.querySelector(".tv").innerHTML = tbl(
+  const rows=D.chain.slice().sort((a,b)=>a.calving<b.calving?-1:1);
+  const s=D.stats;
+  const c=card("chain","Every calving, traced back to its own service",
+    `<b>${s.calvings} calvings</b> across ${s.cows} cows · each row follows one cow backwards: her calving, the `+
+    `pregnancy check that confirmed it, and the service that caused it, <b>about nine months earlier</b> · `+
+    `<b>reconstructed, not recorded</b> — the source holds three separate event lists, so the service is matched `+
+    `within the same cow ID by gestation window (±35 days around 280) and the conception by confirmation window `+
+    `(25–120 days after service) · the fit is the check: <b>gestation median ${s.gestMed} days</b> `+
+    `(${s.gestMin}–${s.gestMax}, n=${s.gestN}) and <b>service→confirmation median ${s.pdMed} days</b> `+
+    `(${s.pdMin}–${s.pdMax}, n=${s.pdN}) · <b>${s.calvings-s.withService} calvings have no matching service and `+
+    `${s.calvings-s.withPD} no confirmed conception</b> — left blank, never filled in`);
+  const dash=v=>v||`<span style="color:var(--muted)">—</span>`;
+  c.querySelector(".tv").innerHTML=tbl(
     ["Cow","Service","Conception (PD+)","Calving","Gestation (d)","Service → PD (d)"],
-    rows.map(r=>[r.cow, dash(fmtD(r.service)), dash(fmtD(r.pd)), fmtD(r.calving),
-                 r.gest==null?dash(null):fmtN(r.gest), r.s2p==null?dash(null):fmtN(r.s2p)]));
-  c.classList.add("table-on","wide");   // full width: six columns do not fit a grid cell
+    rows.map(r=>[r.cow,dash(fmtD(r.service)),dash(fmtD(r.pd)),fmtD(r.calving),
+                 r.gest==null?dash(null):fmtN(r.gest),r.s2p==null?dash(null):fmtN(r.s2p)]));
+  c.classList.add("table-on","wide");
   c.querySelector(".plot").remove();
+  c.querySelector(".rlegend").remove();
   return c;
 }
 
-// ---- tiles ------------------------------------------------------------------
 function tiles(){
   const s=D.stats;
   const t=(v,u,l,n)=>`<div class="tile"><div class="tlabel">${l}</div>
     <div class="tval">${v}<span class="tunit">${u||""}</span></div><div class="tnote">${n||""}</div></div>`;
-  document.getElementById("tiles").innerHTML =
+  document.getElementById("tiles").innerHTML=
     t(s.services,"","Services","inseminations recorded in the window")+
     t(s.conceptions,"","Conceptions","pregnancy checks confirmed positive")+
     t(s.calvings,"","Calvings",`${s.cows} cows, 4 Aug 2025 – 4 Aug 2026`)+
-    t(s.gestMed,"d","Gestation, median",`${s.gestMin}–${s.gestMax} · n=${s.gestN} matched services`)+
+    t(s.gestMed,"d","Gestation, median",`${s.gestMin}–${s.gestMax} · n=${s.gestN} · about nine months`)+
     t(s.pdMed,"d","Service → confirmation",`median · n=${s.pdN}`)+
     t(fmtN(s.services/s.calvings,1),"","Services per calving","in-window counts, not a service-per-conception rate");
 }
 
-// ---- theme, same behaviour as the main dashboard ----------------------------
+function render(){
+  W = expanded ? 1180 : 680;
+  H = expanded ? 400 : 300;
+  tiles();
+  const g=document.getElementById("grid"); g.innerHTML="";
+  if(show("monthly")) g.appendChild(monthlyChart());
+  if(show("cohort"))  g.appendChild(cohortChart());
+  if(show("chain"))   g.appendChild(chainCard());
+  document.getElementById("back").style.display = expanded ? "inline-block" : "none";
+}
+document.getElementById("back").addEventListener("click",()=>{ expanded=null; render(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && expanded){ expanded=null; render(); } });
+
 const tbtn=document.getElementById("theme"), _root=document.documentElement;
 const _mq=window.matchMedia("(prefers-color-scheme: dark)");
 const isDark=()=> _root.hasAttribute("data-theme") ? _root.getAttribute("data-theme")==="dark" : _mq.matches;
 const labelTheme=()=>{ const d=isDark(); tbtn.textContent=d?"Light":"Dark";
   tbtn.setAttribute("aria-label", d?"Switch to light mode":"Switch to dark mode"); };
-tbtn.addEventListener("click",()=>{ _root.setAttribute("data-theme", isDark()?"light":"dark"); labelTheme(); });
+tbtn.addEventListener("click",()=>{ _root.setAttribute("data-theme", isDark()?"light":"dark"); labelTheme(); render(); });
 labelTheme();
-
-const grid=document.getElementById("grid");
-tiles();
-grid.appendChild(monthlyChart());
-grid.appendChild(lagChart());
-grid.appendChild(chainCard());
+render();
 
 </script>
 </body>
