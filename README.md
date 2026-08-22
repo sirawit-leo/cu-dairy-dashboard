@@ -12,7 +12,7 @@
 embedded, no internet, no server, no external files. Double-clicking works, and so does
 copying this whole folder to a USB stick or sharing it.
 
-## The four pages
+## The six pages
 
 | File | What it is |
 |---|---|
@@ -20,6 +20,8 @@ copying this whole folder to a USB stick or sharing it.
 | `udderhealth.html` | **Udder health** — 4 tabs: herd and lactation stage, milk quality, udder/mastitis/SCC, milking routine & hygiene (incl. milk flow and bimodality). |
 | `reproduction.html` | **Reproduction** — 4 tabs: scorecard, breeding efficiency, postpartum disease, cow records. |
 | `economics.html` | **Economics** — 4 tabs: feed cost & efficiency (per-pen drill-down), milk flow & losses, IOFC & herd structure (incl. IOFC per cow per day), Wood's lactation curves (per-parity drill-down). **Added 2026-08-22.** |
+| `cullinglist.html` | **Culling** — the chronic-mastitis and reproduction culling list as one decision page. |
+| `actionplan.html` | **Action plan** — 4 tabs: priority (a cost × impact heat map and a criteria scan grid), 180-day roadmap, the 15 actions in detail, evidence & gaps. The herd team's own problem list, costed and sequenced. **Added 2026-08-22.** |
 
 **Percentages.** The page shows one only where the parts genuinely compose a whole — inside a
 stacked column, or across a set of categories that partition something (the three parity
@@ -29,15 +31,16 @@ the chart when the segment can hold the text, and is always in the tooltip as we
 
 **Drill-downs never scroll you back to the top** — opening a pen or a parity keeps your place.
 
-All four carry the same **Home · Udder health · Reproduction · Economics** navigation, so one
-click moves between any two.
+All six carry the same **Home · Economics · Reproduction · Udder health · Culling · Action
+plan** navigation, so one click moves between any two. The order and the markup live in
+`assets/nav.json` — the single place the strip is defined.
 
 > ### Renamed 2026-08-12
 > The dashboard that used to be `index.html` is now **`udderhealth.html`**. `index.html` is the
 > new landing page. Old links and bookmarks to `index.html` still open — they now land on the
 > front door rather than the dashboard.
 
-> **This public repository holds the three dashboards and this README, nothing else.** The
+> **This public repository holds the six pages and this README, nothing else.** The
 > build scripts, the master workbook, the raw farm records and the project wiki live in the
 > working copy and are not published. Paths below that point outside these files (`master/`,
 > `../wiki/`, `assets/`, `backups/`) refer to that working copy. The dashboards are entirely
@@ -49,6 +52,7 @@ click moves between any two.
 | `build_reproduction.py` | Generates `reproduction.html` from the master workbook. |
 | `build_economics.py` | Generates `economics.html` from the master workbook. Holds the single `MILK_PRICE` switch — see below. |
 | `build_landing.py` | Generates `index.html`, reading every headline figure from the master workbook. |
+| `build_actionplan.py` | Generates `actionplan.html`. Holds the `ACTIONS` config block — the plan's judgement layer (urgency, cost band, impact score, owner, KPI, deadline), kept visible so it can be argued with and edited without touching the rendering. |
 | `assets/` | Brand logos, and the shared page shell + navigation the two generators read. |
 | `backups/` | Every prior version, timestamped. Nothing has been deleted. |
 
