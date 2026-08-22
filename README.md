@@ -220,6 +220,8 @@ problem (60% of all treatments), not the incidence driver.
 | Feed bill, July, by pen | นมมาก 31.2% · **สาว/heifers 25.3%** · นมกลาง 21.0% · นมน้อย 10.4% · ดราย 3.5% |
 | Ration ladder, ฿/head/day | นมมาก 175 · นมกลาง 170 · นมน้อย 149 · **ดราย 149** — a 17% spread |
 | Wood's 305-day yield | Lac 1 6,171 · Lac 2 7,127 · **Lac 3+ 5,850 kg — the lowest** |
+| Healthy vs sick | **same peak (26.05 vs 26.37 kg)** — the loss is persistency: 62.2% vs 54.2% of peak held at 305 d |
+| Subclinical ketosis | peaks **2.3 kg above the herd, 11 days earlier**, ends at **31.3% of peak** and **721 kg behind** |
 
 **Feed efficiency did not deteriorate as production fell.** Feed cost fell 17.1% against milk
 sold down 16.5%, so cost per kilogram moved 16.31 → 16.19, essentially unchanged. The farm
