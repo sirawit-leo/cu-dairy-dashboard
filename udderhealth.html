@@ -1678,8 +1678,12 @@ function barChart(host,cats,data,opts={}){
     const h=Math.max(H-PAD.b-Y(v),0);
     svg.appendChild(el("rect",{x:X(i)-bw/2,y:Y(v),width:bw,height:h,rx:4,fill:opts.color||"var(--s1)"}));
     const hit=el("rect",{x:X(i)-Math.max(bw,24)/2,y:PAD.t,width:Math.max(bw,24),height:H-PAD.t-PAD.b,fill:"transparent"});
+    // `name` is the row label in the tooltip. It used to be interpolated raw, so a caller
+    // that omitted it printed the literal string "undefined" beside the value. And the value
+    // was hard-coded to fmtN(v,0), which silently threw away the `dec` the caller asked for —
+    // a 2.39 kg/min flow rate read "2". Both fixed here rather than at each call site.
     hit.addEventListener("mousemove",e=>showTip(e,`<b>${opts.full?opts.full[i]:cats[i]}</b>
-      <div class="r"><span>${opts.name}</span><span>${fmtN(v,0)}</span></div>`
+      <div class="r"><span>${opts.name||opts.yname||""}</span><span>${fmtN(v,opts.dec??0)}</span></div>`
       +(opts.extra?opts.extra(i):"")+(opts.dayExtra?opts.dayExtra(i):"")));
     hit.addEventListener("mouseleave",hideTip);
     svg.appendChild(hit);
@@ -2443,7 +2447,7 @@ function render(){
         CV);
       grid.appendChild(c);
       if(vi===0){
-        barChart(c.querySelector(".plot"),cats,COOP.map(x=>x.kgTotal),{dec:0});
+        barChart(c.querySelector(".plot"),cats,COOP.map(x=>x.kgTotal),{name:"kg sold to the co-op",dec:0});
       } else if(vi===1){
         lineChart(c.querySelector(".plot"),cats,
           [{name:"Co-op SCC",color:"var(--s1)",data:COOP.map(x=>x.scc==null?null:x.scc/1000)},
@@ -2956,7 +2960,9 @@ function render(){
            full:MOT.map(m=>`Cow ${m[0]} · total prep ${fmtN(m[10],0)} s`)});
       } else {
         barChart(c.querySelector(".plot"),MOT.map(m=>m[0]),MOT.map(m=>m[rix]),
-          {dec:rix===13?2:1, refs:rrefs.map(v=>({v,label:rtxt}))});
+          {name:rlab, dec:rix===13?2:1,
+           full:MOT.map(m=>`Cow ${m[0]}`),
+           refs:rrefs.map(v=>({v,label:rtxt}))});
       }
       c.querySelector(".tv").innerHTML=tbl(
         ["Cow","Lactation","DIM",...NEWD.MOT_LAB],
