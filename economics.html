@@ -519,13 +519,16 @@ function ticks(lo, hi, n = 5) {
 /* A small stats panel in the empty top-right of a lactation chart: for each line, the day it
    peaks, the height of that peak, and the 305-day total under it. Those three numbers are what
    a curve is read for, and hunting them out of a table below the chart breaks the reading.
-   `rows` = [{name, color, peakDay, peakKg, auc, dim}] — dim greys a line whose n is too small. */
+   Persistency is carried as "% of peak still there at 305 days" — the plainest of the four
+   measures the page reports, and the one that reads directly against the peak kg and 305-day
+   columns beside it. The other three live in the table and the persistency panel below.
+   `rows` = [{name, color, peakDay, peakKg, auc, pers, dim}] — dim greys a line whose n is small. */
 function statBox(svg, rows) {
   if (!rows || !rows.length) return;
   const FS = 11.5, LH = 15.5, PADX = 9, PADY = 7, HEAD = 13;
   const nameW = Math.max(...rows.map(r => r.name.length)) * 6.1 + 14;
-  const colW = [52, 60, 62];
-  const boxW = nameW + colW[0] + colW[1] + colW[2] + PADX * 2;
+  const colW = [50, 56, 62, 66];
+  const boxW = nameW + colW[0] + colW[1] + colW[2] + colW[3] + PADX * 2;
   const boxH = HEAD + rows.length * LH + PADY * 2;
   const x0 = W - PAD.r - boxW, y0 = PAD.t + 2;
   const g = el("g", { "pointer-events": "none" });
@@ -538,11 +541,10 @@ function statBox(svg, rows) {
       style: "font-variant-numeric:tabular-nums" }, {}));
     t.textContent = s; g.appendChild(t);
   };
-  const cx = [x0 + PADX + nameW + colW[0] - 6,
-              x0 + PADX + nameW + colW[0] + colW[1] - 6,
-              x0 + PADX + nameW + colW[0] + colW[1] + colW[2] - 6];
+  const cx = colW.map((_, i) =>
+    x0 + PADX + nameW + colW.slice(0, i + 1).reduce((a, w) => a + w, 0) - 6);
   const hy = y0 + PADY + 8;
-  ["peak day", "peak kg", "305-d kg"].forEach((h, i) =>
+  ["peak day", "peak kg", "305-d kg", "% of peak @305"].forEach((h, i) =>
     txt(cx[i], hy, h, { fs: 9.5, anchor: "end", fill: "var(--muted)" }));
   rows.forEach((r, i) => {
     const y = y0 + PADY + HEAD + i * LH + 4;
@@ -553,6 +555,7 @@ function statBox(svg, rows) {
     txt(cx[0], y, r.peakDay == null ? "—" : fmt(r.peakDay, 0), { anchor: "end" });
     txt(cx[1], y, r.peakKg == null ? "—" : fmt(r.peakKg, 1), { anchor: "end" });
     txt(cx[2], y, r.auc == null ? "—" : fmt(r.auc, 0), { anchor: "end", w: 600 });
+    txt(cx[3], y, r.pers == null ? "—" : fmt(r.pers, 1) + "%", { anchor: "end", w: 600 });
   });
   svg.appendChild(g);
 }
@@ -1328,7 +1331,7 @@ function renderLac(grid) {
         stroke: "var(--surface-1)", "stroke-width": 1.6 }));
     });
     statBox(svg, Wg.map(w => ({ name: w.g, color: WCOL[w.g],
-      peakDay: w.peak_day, peakKg: w.peak_kg, auc: w.auc })));
+      peakDay: w.peak_day, peakKg: w.peak_kg, auc: w.auc, pers: w.pk305 })));
     dims.forEach((d, i) => {
       if (i % 3) return;
       const hit = el("rect", { x: X(i) - 3, y: PAD.t, width: 6, height: H - PAD.b - PAD.t, fill: "transparent" });
@@ -1406,7 +1409,8 @@ function renderLac(grid) {
         fill:HCOL[g.group],stroke:"var(--surface-1)","stroke-width":1.5}));
     });
     statBox(svg, cs.map(({g})=>({ name:g.group+(g.cows<SMALL?" ⚠":""), color:HCOL[g.group],
-      peakDay:g.curve_peak_day, peakKg:g.curve_peak_kg, auc:g.auc_305d, dim:g.cows<SMALL })));
+      peakDay:g.curve_peak_day, peakKg:g.curve_peak_kg, auc:g.auc_305d,
+      pers:g.pct_peak_at_305d, dim:g.cows<SMALL })));
     dims.forEach((d,i)=>{ if(i%3) return;
       const hit=el("rect",{x:X(i)-3,y:PAD.t,width:6,height:H_-PAD.b-PAD.t,fill:"transparent"});
       hit.addEventListener("mousemove",e=>showTip(e,tipHead("DIM "+d)+
@@ -1464,7 +1468,8 @@ function renderLac(grid) {
         fill:HCOL[g.group],stroke:"var(--surface-1)","stroke-width":1.5}));
     });
     statBox(svg, cs.map(({g})=>({ name:g.group+(g.cows<SMALL?" ⚠":""), color:HCOL[g.group],
-      peakDay:g.curve_peak_day, peakKg:g.curve_peak_kg, auc:g.auc_305d, dim:g.cows<SMALL })));
+      peakDay:g.curve_peak_day, peakKg:g.curve_peak_kg, auc:g.auc_305d,
+      pers:g.pct_peak_at_305d, dim:g.cows<SMALL })));
     dims.forEach((d,i)=>{ if(i%3) return;
       const hit=el("rect",{x:X(i)-3,y:PAD.t,width:6,height:H_-PAD.b-PAD.t,fill:"transparent"});
       hit.addEventListener("mousemove",e=>showTip(e,tipHead("DIM "+d)+
@@ -1601,7 +1606,8 @@ function renderLacDetail(grid, g, WCOL) {
     svg.appendChild(el("circle", { cx: X(pi), cy: Y(w.peak_kg), r: 5, fill: col,
       stroke: "var(--surface-1)", "stroke-width": 1.8 }));
     statBox(svg, [w, ...others].map(x => ({ name: x.g + (x.g === g ? " ◂" : ""),
-      color: WCOL[x.g], peakDay: x.peak_day, peakKg: x.peak_kg, auc: x.auc, dim: x.g !== g })));
+      color: WCOL[x.g], peakDay: x.peak_day, peakKg: x.peak_kg, auc: x.auc,
+      pers: x.pk305, dim: x.g !== g })));
     dims.forEach((d, i) => {
       if (i % 3) return;
       const hit = el("rect", { x: X(i) - 3, y: PAD.t, width: 6, height: H - PAD.b - PAD.t, fill: "transparent" });
