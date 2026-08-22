@@ -136,22 +136,26 @@ circulation; always say which one a count came from.
 Added 2026-08-22 to the *Milking routine & hygiene* tab, from the PM milking of 7 Aug 2026 —
 the same 15 cows and the same day as the time-and-motion study beside it.
 
-Flow is recorded in four windows (0–15, 15–30, 30–60, 60–120 s). Each cow is normalised to her
-own peak so the chart compares *when* her milk arrived rather than how much:
+Flow is recorded in four windows (0–15, 15–30, 30–60, 60–120 s). **Every cow is plotted
+individually**, one small panel each, so a curve can be read as unimodal or bimodal for that
+animal rather than only in aggregate. The PM milking is the solid line; the AM milking of the
+same day sits behind it as a faint dashed comparison.
 
-| Pattern | n | Mean shape |
+| Pattern | n | Cows |
 |---|---:|---|
-| **Bimodal** — flow dipped then recovered | **3** | 69.6% → **58.8%** → 94.0% → 61.5% |
-| **Slow start** — first 15 s under 75% of her own peak | **8** | 67.4% → 86.8% → 94.8% → 74.5% |
-| Normal rise | 4 | 85.5% → 95.5% → 97.6% → 85.6% |
+| **Bimodal** — falls, then climbs again | **3** | 6503, 51009, 70117 |
+| **Slow start** — first 15 s under 75% of her own peak | **8** | 6404, 6502, 7865, 51122, 61119, 750303, 750502, 750513 |
+| Unimodal — one peak, clean rise and fall | 4 | 51226, 60703, 61219, 70212 |
 
-**11 of 15 cows show one or the other**, and the dip survives averaging rather than being one
-odd animal. Both patterns are what too little pre-stimulation produces, and this herd's pre-dip
+**11 of 15 cows show one or the other**, and **the same three cows are bimodal in both
+milkings** — a dip that repeats across two milkings on one day is a property of the cow and her
+preparation, not noise in a single observation. Both patterns are what too little pre-stimulation produces, and this herd's pre-dip
 contact averages **3.1 s against a 10–20 s target** — two instruments on the same cows on the
 same day, agreeing.
 
 **Read as a floor, not a census.** Four windows cannot resolve a dip shorter than 15 seconds,
-so the true count is at least 3. And nothing here randomises prep time, so the association is
+so the true count is at least 3; and a window reading zero means the milking had finished, not
+that flow stopped. Nothing here randomises prep time, so the association is
 mechanistically expected but not proved; a prep-time change re-measured on the same cows would
 settle it.
 
