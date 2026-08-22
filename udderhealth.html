@@ -702,6 +702,21 @@ const gynPill = g => { const d=GYN[g]; return g==null ? "—"
 // intake. Two cows in the same pen therefore always show the same numbers.
 const FEED_KEYS=[["dmi","DMI","kg/d",2],["cp","Protein","g/d",0],
                  ["ne","Energy","Mcal/d",2],["pendf","PeNDF8","%",1]];
+// Feed cost per head per day, baht, by month|group. Apportioned from the monthly feed bill
+// by kilograms actually consumed per pen (master FeedCostByPen) — the farm buys one bill and
+// mixes one TMR, so no per-pen invoice exists and this is a share, not a measurement.
+const FEEDCOST = {"1|2":235.2,"1|3":165.2,"1|1":110.5,"2|2":216.2,"2|3":174.5,"2|1":112.2,"3|2":233.6,"3|3":226.0,"3|4":108.1,"3|1":87.0,"4|2":199.4,"4|3":207.8,"4|4":121.3,"4|1":244.0,"5|2":199.7,"5|3":193.1,"5|4":160.4,"5|1":163.5,"6|2":176.2,"6|3":156.1,"6|4":92.6,"6|1":100.4,"7|2":175.2,"7|3":170.1,"7|4":149.2,"7|1":87.9};
+const feedCostOf = (di,cow) => {
+  const g = grpOf(di,cow); if(g==null||di==null) return null;
+  return FEEDCOST[(D2[di].getMonth()+1)+"|"+g] ?? null;
+};
+
+// PM milk-flow profile, 7 Aug 2026, for the 15 cows that also had a motion analysis that day.
+// Flow is kg/min in four windows: 0-15, 15-30, 30-60, 60-120 seconds.
+//   dip     the bucket where flow fell and then recovered  -> bimodal let-down
+//   slow    first 15 s under 75% of that cow's own peak    -> she had not let down yet
+const FLOWPM = {"51226":{"y":8.9,"m2":8.4,"p2":94.6,"amt":2.6,"f":[4.14,4.72,4.26,4.08],"fp":87.7,"dip":null,"dipPct":null,"slow":false},"750303":{"y":10,"m2":7.5,"p2":74.6,"amt":3.1,"f":[2.99,3.24,4.08,3.89],"fp":73.3,"dip":null,"dipPct":null,"slow":true},"70117":{"y":6.6,"m2":5.9,"p2":89.7,"amt":2.6,"f":[2.74,2.96,2.61,3.18],"fp":86.2,"dip":2,"dipPct":11.8,"slow":false},"6404":{"y":7.2,"m2":4.1,"p2":56.5,"amt":4.1,"f":[1.84,2.88,1.98,1.89],"fp":63.9,"dip":null,"dipPct":null,"slow":true},"51122":{"y":8.7,"m2":7.4,"p2":85.4,"amt":3.6,"f":[2.86,4.49,4.39,3.37],"fp":63.7,"dip":null,"dipPct":null,"slow":true},"7865":{"y":13.2,"m2":12.6,"p2":95.5,"amt":2.4,"f":[4.9,6.82,7.18,6.09],"fp":68.2,"dip":null,"dipPct":null,"slow":true},"750513":{"y":8.5,"m2":7.1,"p2":83.3,"amt":3.4,"f":[2.78,3.15,4.65,3.24],"fp":59.8,"dip":null,"dipPct":null,"slow":true},"61119":{"y":6.8,"m2":6.2,"p2":90.5,"amt":2.7,"f":[2.58,2.88,3.53,3.03],"fp":73.1,"dip":null,"dipPct":null,"slow":true},"750502":{"y":5.6,"m2":4.6,"p2":82.5,"amt":3,"f":[1.88,1.9,2.68,2.35],"fp":70.1,"dip":null,"dipPct":null,"slow":true},"51009":{"y":7.1,"m2":6.8,"p2":95.6,"amt":2.3,"f":[4.1,3.28,5.1,2.36],"fp":80.4,"dip":1,"dipPct":20.0,"slow":false},"70212":{"y":10,"m2":9.5,"p2":94.7,"amt":2.6,"f":[4.17,4.67,5.06,4.76],"fp":82.4,"dip":null,"dipPct":null,"slow":false},"61219":{"y":7.5,"m2":5.8,"p2":77.1,"amt":3.2,"f":[2.84,3.22,3.3,2.62],"fp":86.1,"dip":null,"dipPct":null,"slow":false},"6503":{"y":5.1,"m2":4.7,"p2":91.7,"amt":2.5,"f":[1.92,0.87,4.55,1.74],"fp":42.2,"dip":1,"dipPct":54.7,"slow":true},"60703":{"y":6.5,"m2":5.9,"p2":91.1,"amt":2.6,"f":[2.88,3.08,3.35,2.76],"fp":86,"dip":null,"dipPct":null,"slow":false},"6502":{"y":3.5,"m2":3.3,"p2":94,"amt":2.3,"f":[1.82,2.73,2.51,0.88],"fp":66.7,"dip":null,"dipPct":null,"slow":true}};
+
 function feedOf(di,cow){
   const g=grpOf(di,cow);
   if(g==null) return null;
@@ -982,8 +997,12 @@ function model(){
        &&h.some(r=>r[C.SCC]!=null&&r[C.SCC]>200)) return true;                // clause 3
     return false;
   };
-  // band index: 0 Normal · 1 Cured · 2 Subclinical · 3 Clinical
-  //             4 New subclinical · 5 New clinical · 6 No result
+  // band index: 0 Normal · 1 Cured · 2 Chronic subclinical · 3 Chronic clinical
+  //             4 Subclinical · 5 Clinical · 6 No result
+  // Bands 2/3 are cows already infected at their previous test; 4/5 crossed the threshold
+  // this round. "Chronic" here means ONLY "infected at her previous test too" — it is not
+  // the workbook's chronic flag (≥3 high tests anywhere) nor the culling list's (≥3
+  // CONSECUTIVE tests). Three different definitions; this is the loosest of them.
   const BAND=new Map();                       // "dateIdx|cow" -> [bandA, bandB]
   byCowAll.forEach((rs,cow)=>rs.forEach((r,n)=>{
     const scc=r[C.SCC]; let a,b;
@@ -2503,10 +2522,10 @@ function render(){
     const ALLBANDS=[
       {k:"Normal",          icon:"●", color:"var(--good)"},
       {k:"Cured",           icon:"✓", color:"var(--s3)"},
-      {k:"Subclinical",     icon:"◆", color:"var(--s4)"},
-      {k:"Clinical",        icon:"✚", color:"var(--s2)"},
-      {k:"New subclinical", icon:"◇", color:"var(--blood)"},
-      {k:"New clinical",    icon:"✖", color:"var(--critical)"},
+      {k:"Chronic subclinical", icon:"◆", color:"var(--s4)"},
+      {k:"Chronic clinical",    icon:"✚", color:"var(--s2)"},
+      {k:"Subclinical",         icon:"◇", color:"var(--blood)"},
+      {k:"Clinical",            icon:"✖", color:"var(--critical)"},
       {k:"No result",       icon:"○", color:"var(--none)"}];
     // ---- parity slice ----------------------------------------------------
     // A second, independent axis: either definition of "new" can be read at any parity.
@@ -2935,6 +2954,53 @@ function render(){
         .concat([["<b>Average</b>","","",...NEWD.MOT_AVG.map(v=>`<b>${fmtN(v,2)}</b>`)],
                  ["<b>Target</b>","","",...NEWD.MOT_TGT.map(v=>`<b>${v||"—"}</b>`)]]));
     }
+    // ---- milk flow, PM of the same day as the time-and-motion study -------------
+    if(show("rout")){
+      const FK=Object.keys(FLOWPM);
+      const WIN=["0–15 s","15–30 s","30–60 s","60–120 s"];
+      // Shape, not level: each cow is normalised to her OWN peak bucket, so a 13 kg cow and
+      // a 3.5 kg cow can be compared on when their flow arrived rather than how much of it.
+      const clsOf=c=>FLOWPM[c].dip!=null?0:(FLOWPM[c].slow?1:2);
+      const GRPS=[
+        {t:"Bimodal — flow dipped, then recovered", v:"--critical"},
+        {t:"Slow start — first 15 s under 75% of her own peak", v:"--warning"},
+        {t:"Normal rise", v:"--good"}];
+      const members=[0,1,2].map(g=>FK.filter(c=>clsOf(c)===g));
+      const prof=g=>WIN.map((_,i)=>{
+        const v=members[g].map(c=>{const f=FLOWPM[c].f, pk=Math.max(...f); return 100*f[i]/pk;});
+        return v.length?v.reduce((a,b)=>a+b,0)/v.length:null; });
+      const nBi=members[0].length, nSlow=members[1].length;
+      c=card("flow","Milk flow through the milking — PM, 7 Aug 2026",
+        `The same 15 cows as the time-and-motion study above, same milking · flow in four windows, `+
+        `each cow <b>normalised to her own peak</b> so the lines compare <b>when</b> her milk arrived, `+
+        `not how much — 100% is that cow's own best window · <b>${nBi} cows are bimodal</b> — flow fell and then recovered, the signature of `+
+        `the teat cistern emptying before oxytocin let-down arrives · <b>${nSlow} more start slow</b>, `+
+        `with the first 15 seconds under 75% of their own peak · `+
+        `<b>both patterns are what too little pre-stimulation produces</b>, and this herd's pre-dip contact `+
+        `averages <b>${fmtN(NEWD.MOT_AVG[0],1)} s against a 10–20 s target</b> · `+
+        `four windows is coarse — a dip lasting under 15 s cannot be seen at all, so these counts are a `+
+        `floor, not a census`,
+        GRPS.map((g,i)=>lg(`var(${g.v})`,`${g.t} (${members[i].length})`)).join(""));
+      grid.appendChild(c);
+      lineChart(c.querySelector(".plot"),WIN,
+        GRPS.map((g,i)=>({name:g.t,color:`var(${g.v})`,data:prof(i)})),
+        // refs here only stretch the y-scale to 100 — this lineChart uses them for scaling
+        // and does not draw a rule, so no label is given that would never appear. The 75%
+        // slow-start threshold is carried by the table's colour instead.
+        {yfmt:v=>fmtN(v,0)+"%", zero:true, refs:[{v:100}]});
+      c.querySelector(".tv").innerHTML=tbl(
+        ["Cow","Pattern","Yield kg","AMT min","% in first 2 min",
+         ...WIN.map(w=>w+" kg/min"),"First 15 s, % of her peak","Pre-dip s"],
+        FK.map(cw=>({cw,k:FLOWPM[cw],g:clsOf(cw)}))
+          .sort((a,b)=>a.g-b.g || a.k.fp-b.k.fp)
+          .map(({cw,k,g})=>[cw,
+            `<span class="pill" style="color:var(${GRPS[g].v})">${
+              g===0?`✖ bimodal · dip ${fmtN(k.dipPct,0)}% at ${WIN[k.dip]}`:g===1?"▲ slow start":"● normal"}</span>`,
+            fmtN(k.y,1), fmtN(k.amt,1), fmtN(k.p2,0)+"%",
+            ...k.f.map(v=>fmtN(v,2)),
+            `<b style="color:var(${k.fp<75?"--warning":"--good"})">${fmtN(k.fp,1)}%</b>`,
+            (()=>{const m=(NEWD.MOT||[]).find(x=>String(x[0])===cw); return m?fmtN(m[3],2):"—";})()]));
+    }
   }
   if(show("cows")){
   // 7 — cow table
@@ -3051,7 +3117,7 @@ function render(){
         W=_W; H=_H;
         const F=(v,d0=2)=>v==null?"—":fmtN(v,d0);
         dc.querySelector("#dettv").innerHTML =
-          `<table><thead><tr>${["Date","DIM","Parity","Feeding group","Gyn status","SCC","Udder status","Fat %","Fat vs herd","Protein %","Casein %","Lactose %",
+          `<table><thead><tr>${["Date","DIM","Parity","Feeding group","Gyn status","Milk kg/d","SCC","Udder status","Fat %","Fat vs herd","Protein %","Casein %","Lactose %",
             "TS %","SNF %","Urea","MUN","F:P","FPD","FFA","Density","Acidity","Treated (this round)"]
             .map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${
           rs.map(r=>{ const cl=CLASS[classOf(r[C.SCC],selCow,r[0])], tc=treated(selCow,r[0],0);
@@ -3060,6 +3126,10 @@ function render(){
               <td>${r[C.Lactation]==null?"—":fmtN(r[C.Lactation])}</td>
               <td style="text-align:left">${grpPill(grpOf(r[0],selCow))}</td>
               <td style="text-align:left">${gynPill(gynOf(r[0],selCow))}</td>
+              <td>${(()=>{ const k=r[0]+"|"+selCow, mv=YLDDATA[k], ev=YLDEST[k];
+                 if(mv!=null) return fmtN(mv,1);
+                 if(ev!=null) return fmtN(ev,1)+` <b title="Wood's curve estimate — no milk was recorded 27 Apr – 16 Jul" style="color:var(--s4)">≈</b>`;
+                 return "—"; })()}</td>
               <td>${r[C.SCC]==null?"—":fmtN(r[C.SCC])}</td>
               <td style="text-align:left"><span class="pill" style="color:var(${cl.v})">${cl.icon} ${cl.k}</span></td>
               <td>${F(r[C.Fat])}</td>
@@ -3148,6 +3218,9 @@ function render(){
                these values are <b>the group mean</b> from the ration evaluation file, not a per-cow measurement
                so every cow in the same pen in the same month gets the same set of numbers ·
                column <b>required</b> and <b>Balance</b> computed from this cow's own body weight and milk yield (NRC 2001) ·
+               <b>Feed cost ฿/d</b> is her pen's share of that month's feed bill, apportioned by kilograms actually
+               consumed and divided by the pen's own headcount — the farm buys one bill and mixes one TMR, so no
+               per-pen invoice exists and this is an apportionment, not an invoice ·
                a <b style="color:var(--s4)">≈</b> beside a value means that value is <b>estimated, not measured</b>, and it is
                marked on the column it applies to: <b>Milk kg/d ≈</b> is a per-cow <b>Wood's curve</b>
                Y = a·t<sup>b</sup>·e<sup>−ct</sup> fitted to her own measured days either side of the 27 Apr – 16 Jul
@@ -3160,7 +3233,7 @@ function render(){
                fitting on the pre-outage days alone and extrapolating is far worse (MAE 5.7 kg), which is why every
                fit here is anchored on measured days <b>both sides</b> of the gap</p>
              <div class="tv" style="display:block;max-height:none">${
-             tbl(["Date","Group",
+             tbl(["Date","Group","Feed cost ฿/d",
                   "DMI kg/d","required","Evaluation",
                   "Protein g/d","required","Evaluation",
                   "Energy Mcal/d","required","Evaluation",
@@ -3169,6 +3242,8 @@ function render(){
                frows.map(({di,f,e})=>[
                  `${D2[di].getDate()} ${TH_M[D2[di].getMonth()]}`,
                  grpPill(f.g),
+                 (()=>{ const cst=feedCostOf(di,selCow);
+                        return cst==null?"—":`<b>฿${fmtN(cst,0)}</b>`; })(),
                  fmtN(f.dmi,2),  req(f.dmiR,2),  vPill(f.dmiI,f.g),
                  fmtN(f.cp,0),   req(f.cpR,0),   vPill(f.cpI,f.g),
                  fmtN(f.ne,2),   req(f.neR,2),   vPill(f.neI,f.g),

@@ -17,7 +17,7 @@ copying this whole folder to a USB stick or sharing it.
 | File | What it is |
 |---|---|
 | `index.html` | **Landing page.** Almost empty by design — a header and the navigation strip. Its job is to hand you on to one of the three dashboards. |
-| `udderhealth.html` | **Udder health** — 4 tabs: herd and lactation stage, milk quality, udder/mastitis/SCC, milking routine & hygiene. |
+| `udderhealth.html` | **Udder health** — 4 tabs: herd and lactation stage, milk quality, udder/mastitis/SCC, milking routine & hygiene (incl. milk flow and bimodality). |
 | `reproduction.html` | **Reproduction** — 4 tabs: scorecard, breeding efficiency, postpartum disease, cow records. |
 | `economics.html` | **Economics** — 4 tabs: feed cost & efficiency (per-pen drill-down), milk flow & losses, IOFC & herd structure (incl. IOFC per cow per day), Wood's lactation curves (per-parity drill-down). **Added 2026-08-22.** |
 
@@ -113,6 +113,47 @@ structure* tab rather than one being quietly chosen.
 Submission rate, heat detection rate and days-to-first-service all depend on it, and no source
 states the farm's policy. **45 days is assumed, provisionally**, pending confirmation from the
 farm. The reproduction dashboard shows the assumption rather than burying it.
+
+### The mastitis band labels changed on 2026-08-22
+
+The udder-status chart's bands were renamed. **The bars did not move — only the labels did** —
+but a figure quoted from an older screenshot will not mean what it says:
+
+| Before | Now |
+|---|---|
+| New clinical | **Clinical** |
+| New subclinical | **Subclinical** |
+| Clinical | **Chronic clinical** |
+| Subclinical | **Chronic subclinical** |
+
+**"Chronic" here means only "she was infected at her previous test too".** It is *not* the
+workbook's chronic flag (≥3 high SCC tests anywhere in the year, 24 cows) and *not* the
+culling-list definition (≥3 **consecutive** tests, 7 cows). Three different meanings are in
+circulation; always say which one a count came from.
+
+### Milk flow and bimodality
+
+Added 2026-08-22 to the *Milking routine & hygiene* tab, from the PM milking of 7 Aug 2026 —
+the same 15 cows and the same day as the time-and-motion study beside it.
+
+Flow is recorded in four windows (0–15, 15–30, 30–60, 60–120 s). Each cow is normalised to her
+own peak so the chart compares *when* her milk arrived rather than how much:
+
+| Pattern | n | Mean shape |
+|---|---:|---|
+| **Bimodal** — flow dipped then recovered | **3** | 69.6% → **58.8%** → 94.0% → 61.5% |
+| **Slow start** — first 15 s under 75% of her own peak | **8** | 67.4% → 86.8% → 94.8% → 74.5% |
+| Normal rise | 4 | 85.5% → 95.5% → 97.6% → 85.6% |
+
+**11 of 15 cows show one or the other**, and the dip survives averaging rather than being one
+odd animal. Both patterns are what too little pre-stimulation produces, and this herd's pre-dip
+contact averages **3.1 s against a 10–20 s target** — two instruments on the same cows on the
+same day, agreeing.
+
+**Read as a floor, not a census.** Four windows cannot resolve a dip shorter than 15 seconds,
+so the true count is at least 3. And nothing here randomises prep time, so the association is
+mechanistically expected but not proved; a prep-time change re-measured on the same cows would
+settle it.
 
 ### Smaller ones, still worth knowing
 
