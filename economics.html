@@ -467,6 +467,13 @@ function card(key, title, sub, legend, vspec) {
     c.classList.contains("table-on") ? openTables.add(key) : openTables.delete(key);
   });
   c.querySelector(".zoom").addEventListener("click", () => { expanded = on ? null : key; render(); });
+  // Without this the chips draw and nothing listens: they looked like a working control and
+  // were not. Switching a view must not throw the reader back to the top of the page either.
+  c.querySelectorAll(".vchip").forEach(b => b.addEventListener("click", () => {
+    const y = scrollY;
+    if (key === "cows") cowMetric = +b.dataset.i; else views.set(key, +b.dataset.i);
+    render(); scrollTo(0, y);
+  }));
   if (on) c.classList.add("expanded");
   return c;
 }
@@ -1288,17 +1295,11 @@ function renderLac(grid) {
       svg.appendChild(hit);
     });
   })();
-  if (expanded === "l1") {
-    const gl = document.createElement("div");
-    gl.innerHTML = persistencyPanel(Wg);
-    c.appendChild(gl);
-  } else {
-    const hint = document.createElement("p");
-    hint.className = "prov";
-    hint.innerHTML = `⤢ <b>Zoom this card</b> to open <i>Persistency — what the numbers mean</i>,
-      which explains the three percentages and why Wood’s S is not one of them.`;
-    c.appendChild(hint);
-  }
+  // Shown from the start rather than behind the zoom: it explains the numbers on this very
+  // chart, and a reader should not have to discover a control to reach the explanation.
+  const gl = document.createElement("div");
+  gl.innerHTML = persistencyPanel(Wg);
+  c.appendChild(gl);
   table(c.querySelector(".tv"),
     ["Parity", "a", "b", "c", "Curve peak day", "Curve peak kg", "Observed peak day",
      "Observed peak kg", "% of peak at 305 d", "% kept each month", "Wood's S (index)",
