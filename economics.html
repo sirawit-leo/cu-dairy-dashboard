@@ -318,6 +318,8 @@ tbody tr:hover{background:color-mix(in srgb,var(--text-primary) 4%,transparent)}
   border-radius:4px;padding:1px 5px}
 .keypt{background:color-mix(in srgb,var(--s1) 7%,transparent);border-left:3px solid var(--s1);
   border-radius:0 8px 8px 0;padding:12px 15px;margin-top:16px;font-size:13px;line-height:1.75}
+.glossary{margin-top:18px;padding-top:16px;border-top:1px solid var(--grid)}
+.gtitle{margin:0 0 12px;font-size:15px;font-weight:650;letter-spacing:-.01em}
 .keypt+.keypt{margin-top:10px;border-left-color:var(--s4);
   background:color-mix(in srgb,var(--s4) 8%,transparent)}
 .keypt b{color:var(--text-primary)}
@@ -442,13 +444,22 @@ const tipHead = t => `<b>${t}</b>`;
 document.addEventListener("scroll", hideTip, true);
 
 // ---------------------------------------------------------------- card factory
-function card(key, title, sub, legend) {
+// `vspec` is an optional list of chip labels; the caller reads viewOf(key) to decide what to
+// draw. This argument did not exist until 2026-08-22 — the health and ketosis cards were
+// written against the reproduction page's five-argument card() and passed their parity list
+// into nothing, so those chips never appeared and the cards were stuck on "All herd".
+const viewOf = key => key === "cows" ? cowMetric : (views.get(key) || 0);
+
+function card(key, title, sub, legend, vspec) {
   const c = document.createElement("div");
   c.className = "card" + (openTables.has(key) ? " table-on" : "");
   const on = expanded === key;
+  const vi = viewOf(key);
   c.innerHTML = `<div class="chead"><h2 class="ctitle">${title}</h2><div class="cbtns">
     <button class="tgl tbtn">Table</button>
     <button class="tgl zoom">${on ? "⤡ Close" : "⤢ Zoom"}</button></div></div>
+    ${vspec && vspec.length > 1 ? `<div class="views" role="group">${vspec.map((v, i) =>
+      `<button class="vchip" data-i="${i}" aria-pressed="${i === vi}">${v}</button>`).join("")}</div>` : ""}
     <p class="csub">${sub}</p><div class="plot"></div>
     <div class="legend">${legend || ""}</div><div class="tv"></div>`;
   c.querySelector(".tbtn").addEventListener("click", () => {
@@ -1146,6 +1157,61 @@ function renderIofc(grid) {
   c.appendChild(pr);
 }
 
+function persistencyPanel(Wg) {
+  // Shown inside the main lactation-curve card when that card is zoomed, rather than standing
+  // as a card of its own — it explains the numbers on that chart and belongs with it.
+  const DEFS = [
+    ["% of peak still there at 305 days", null, w => w.pk305,
+     `The plainest one. At the end of her lactation she is giving this share of what she gave
+      at her best. <code>Y(305) ÷ Y(peak)</code>`],
+    ["% she keeps each month", null, w => w.keep,
+     `“Every month she keeps this much of last month.” The DHI-style figure — the mean of
+      <code>Y(t+30) ÷ Y(t)</code> across the declining phase.`],
+    ["% of peak one month after peak", null, w => w.pk30,
+     `How gently the curve turns over right at the top. All three parities look similar here,
+      which is exactly why this one is the least useful of the three.`],
+    ["Wood’s S", "index, not a %", w => w.S,
+     `<code>−(b+1)·ln(c)</code>. A unitless <b>index</b>, typically 6–7. It ranks the curves
+      correctly but cannot be read as “she keeps X%”. Reported because the literature uses it,
+      not because anyone can interpret it.`]
+  ];
+  const WCOL = { "Lac 1": "var(--s1)", "Lac 2": "var(--s3)", "Lac 3+": "var(--s2)" };
+  return `<div class="glossary"><h3 class="gtitle">Persistency — what the numbers mean</h3>
+  <p style="margin:0 0 4px;font-size:13.5px;line-height:1.75;color:var(--text-secondary)">
+    <b style="color:var(--text-primary)">Persistency is how well a cow holds her yield after
+    peak.</b> One who peaks at 30 kg and is still giving 25 kg months later is persistent;
+    one who peaks at 30 and crashes to 10 is not — even though both peaked at the same
+    height. Peak alone says very little about what a lactation is worth.
+  </p>
+  <div class="defs">
+    ${DEFS.map(([name, badge, get, why]) => `
+      <div class="defrow">
+        <div class="defname">${name}${badge ? `<span class="assume">${badge}</span>` : ""}</div>
+        <div class="defvals">${Wg.map(w => `
+          <div class="defval"><b style="color:${WCOL[w.g]}">${
+            badge ? fmt(get(w), 3) : fmt(get(w), 1) + "%"
+          }</b><span>${w.g}</span></div>`).join("")}</div>
+        <div class="defwhy">${why}</div>
+      </div>`).join("")}
+  </div>
+  <div class="keypt">
+    <b>Read the Lac 3+ column.</b> She keeps <b>${fmt(Wg[2].keep, 1)}%</b> a month against
+    <b>${fmt(Wg[0].keep, 1)}%</b> for a heifer — ${fmt(Wg[0].keep - Wg[2].keep, 1)} points
+    apart, which sounds small. Compounded over ten months it is not: she ends at
+    <b>${fmt(Wg[2].pk305, 1)}% of her peak while the other two end near
+    ${fmt(Wg[0].pk305, 0)}%</b>. That is the same fact Wood’s S is trying to tell you
+    (${fmt(Wg[0].S, 2)} → ${fmt(Wg[2].S, 2)}), in a form you can act on.
+  </div>
+  <div class="keypt">
+    <b>“% of 305-day yield banked” is a different idea again</b> — it appears in the milestone
+    table when you open a parity, and it is <b>not</b> persistency. It is how much of the whole
+    lactation has already been earned by that day, running to 100% at DIM 305 by construction.
+    Lac 3+ has banked <b>42.8% of her entire 305-day yield in her first 100 days</b>, because
+    she front-loads and then falls away. Persistency asks <i>how much of her peak is left
+    today</i>; % banked asks <i>how much of the lactation is already behind her</i>.
+  </div></div>`;
+}
+
 function renderLac(grid) {
   // Full-width cards scale their viewBox to the row. At 680x300 that lands about 1300x573 —
   // far taller than it should be. Curve charts on this tab get a wider box; the two narrow
@@ -1222,6 +1288,17 @@ function renderLac(grid) {
       svg.appendChild(hit);
     });
   })();
+  if (expanded === "l1") {
+    const gl = document.createElement("div");
+    gl.innerHTML = persistencyPanel(Wg);
+    c.appendChild(gl);
+  } else {
+    const hint = document.createElement("p");
+    hint.className = "prov";
+    hint.innerHTML = `⤢ <b>Zoom this card</b> to open <i>Persistency — what the numbers mean</i>,
+      which explains the three percentages and why Wood’s S is not one of them.`;
+    c.appendChild(hint);
+  }
   table(c.querySelector(".tv"),
     ["Parity", "a", "b", "c", "Curve peak day", "Curve peak kg", "Observed peak day",
      "Observed peak kg", "% of peak at 305 d", "% kept each month", "Wood's S (index)",
@@ -1231,63 +1308,6 @@ function renderLac(grid) {
                  fmt(w.pk305, 1) + "%", fmt(w.keep, 1) + "%",
                  fmt(w.S, 3), fmt(w.auc, 0), w.cows, fmt(w.records, 0)]));
 
-  // 1b · what the persistency numbers actually mean
-  //      A glossary, not a chart — so it takes the whole row and reflows instead of
-  //      overflowing behind the next card, which is what the table version did.
-  c = card("l1b", "Persistency — what the numbers mean",
-    `Four figures on this page are called persistency. Only three are percentages.`, "");
-  c.classList.add("wide");
-  grid.appendChild(c);
-  const DEFS = [
-    ["% of peak still there at 305 days", null, w => w.pk305,
-     `The plainest one. At the end of her lactation she is giving this share of what she gave
-      at her best. <code>Y(305) ÷ Y(peak)</code>`],
-    ["% she keeps each month", null, w => w.keep,
-     `“Every month she keeps this much of last month.” The DHI-style figure — the mean of
-      <code>Y(t+30) ÷ Y(t)</code> across the declining phase.`],
-    ["% of peak one month after peak", null, w => w.pk30,
-     `How gently the curve turns over right at the top. All three parities look similar here,
-      which is exactly why this one is the least useful of the three.`],
-    ["Wood’s S", "index, not a %", w => w.S,
-     `<code>−(b+1)·ln(c)</code>. A unitless <b>index</b>, typically 6–7. It ranks the curves
-      correctly but cannot be read as “she keeps X%”. Reported because the literature uses it,
-      not because anyone can interpret it.`]
-  ];
-  c.querySelector(".plot").innerHTML = `
-    <p style="margin:0 0 4px;font-size:13.5px;line-height:1.75;color:var(--text-secondary)">
-      <b style="color:var(--text-primary)">Persistency is how well a cow holds her yield after
-      peak.</b> One who peaks at 30 kg and is still giving 25 kg months later is persistent;
-      one who peaks at 30 and crashes to 10 is not — even though both peaked at the same
-      height. Peak alone says very little about what a lactation is worth.
-    </p>
-    <div class="defs">
-      ${DEFS.map(([name, badge, get, why]) => `
-        <div class="defrow">
-          <div class="defname">${name}${badge ? `<span class="assume">${badge}</span>` : ""}</div>
-          <div class="defvals">${Wg.map(w => `
-            <div class="defval"><b style="color:${WCOL[w.g]}">${
-              badge ? fmt(get(w), 3) : fmt(get(w), 1) + "%"
-            }</b><span>${w.g}</span></div>`).join("")}</div>
-          <div class="defwhy">${why}</div>
-        </div>`).join("")}
-    </div>
-    <div class="keypt">
-      <b>Read the Lac 3+ column.</b> She keeps <b>${fmt(Wg[2].keep, 1)}%</b> a month against
-      <b>${fmt(Wg[0].keep, 1)}%</b> for a heifer — ${fmt(Wg[0].keep - Wg[2].keep, 1)} points
-      apart, which sounds small. Compounded over ten months it is not: she ends at
-      <b>${fmt(Wg[2].pk305, 1)}% of her peak while the other two end near
-      ${fmt(Wg[0].pk305, 0)}%</b>. That is the same fact Wood’s S is trying to tell you
-      (${fmt(Wg[0].S, 2)} → ${fmt(Wg[2].S, 2)}), in a form you can act on.
-    </div>
-    <div class="keypt">
-      <b>“% of 305-day yield banked” is a different idea again</b> — it appears in the milestone
-      table when you open a parity, and it is <b>not</b> persistency. It is how much of the whole
-      lactation has already been earned by that day, running to 100% at DIM 305 by construction.
-      Lac 3+ has banked <b>42.8% of her entire 305-day yield in her first 100 days</b>, because
-      she front-loads and then falls away. Persistency asks <i>how much of her peak is left
-      today</i>; % banked asks <i>how much of the lactation is already behind her</i>.
-    </div>`;
-
   // 3 · healthy against the rest
   const SCOPES=["All herd","Lac 1","Lac 2","Lac 3+"];
   const hAt=(sc,g)=>D.health.find(x=>x.scope===sc&&x.group===g);
@@ -1295,7 +1315,7 @@ function renderLac(grid) {
     ? Array.from({length:305},(_,i)=>{const t=i+1; return g.a*Math.pow(t,g.b)*Math.exp(-g.c*t);})
     : null;
   const SMALL=5;                     // below this a group is its individuals, not a group
-  const hv=Math.min(views.get("hlth")||0,SCOPES.length-1);
+  const hv=Math.min(viewOf("hlth"),SCOPES.length-1);
   const SC=SCOPES[hv];
   const HCOL={"Whole herd":"var(--none)","Healthy":"var(--good)","Sick":"var(--critical)",
               "Subclinical ketosis":"var(--clinical)"};
@@ -1359,7 +1379,7 @@ function renderLac(grid) {
 
   // 4 · subclinical ketosis
   (function(){
-    const kv=Math.min(views.get("ket")||0,SCOPES.length-1);
+    const kv=Math.min(viewOf("ket"),SCOPES.length-1);
     const KS=SCOPES[kv];
     const gs=["Whole herd","Healthy","Subclinical ketosis"].map(n=>hAt(KS,n)).filter(Boolean);
     const K=hAt(KS,"Subclinical ketosis"), W=hAt(KS,"Whole herd");
@@ -1416,7 +1436,7 @@ function renderLac(grid) {
   })();
 
   normBox();
-  // 5 · 305-day yield
+  // 4 · 305-day yield
   c = card("l2", "305-day yield and persistency",
     `305-day yield is the area under each fitted curve. <b>Parity 3+ produces the least of the
      three</b> — ${fmt(Wg[2].auc, 0)} kg against ${fmt(Wg[1].auc, 0)} for parity 2 — which is
