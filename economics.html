@@ -296,6 +296,34 @@ tbody tr:hover{background:color-mix(in srgb,var(--text-primary) 4%,transparent)}
 .tvopen{max-height:430px;overflow:auto;margin-top:8px;-webkit-overflow-scrolling:touch}
 .card.expanded .tvopen{max-height:none}
 .prov{font-size:11.5px;color:var(--muted);margin-top:9px;line-height:1.6}
+/* Nothing inside a card may push past its own edge. Charts are viewBox-scaled so they never
+   do; wide prose and tables can, and did — this is the backstop. */
+.plot{overflow-x:auto;max-width:100%}
+.card{overflow:hidden}
+/* An explainer is not a chart: it gets the full row rather than half of one. */
+.card.wide{grid-column:1/-1}
+.defs{display:flex;flex-direction:column;gap:2px}
+.defrow{display:grid;grid-template-columns:minmax(210px,1.15fr) auto minmax(240px,1.6fr);
+  gap:18px;align-items:start;padding:13px 2px;border-top:1px solid var(--grid)}
+.defrow:first-child{border-top:none}
+.defname{font-weight:650;font-size:13.5px;line-height:1.45}
+.defname .assume{margin-left:0;margin-top:5px;display:inline-block}
+.defvals{display:flex;gap:8px;flex-wrap:wrap}
+.defval{min-width:74px;text-align:center;background:var(--chip-bg);border:1px solid var(--border);
+  border-radius:8px;padding:5px 9px;line-height:1.25}
+.defval b{display:block;font-size:15px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.defval span{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.defwhy{font-size:12.5px;color:var(--text-secondary);line-height:1.65}
+.defwhy code{font-size:11.5px;background:var(--chip-bg);border:1px solid var(--border);
+  border-radius:4px;padding:1px 5px}
+.keypt{background:color-mix(in srgb,var(--s1) 7%,transparent);border-left:3px solid var(--s1);
+  border-radius:0 8px 8px 0;padding:12px 15px;margin-top:16px;font-size:13px;line-height:1.75}
+.keypt+.keypt{margin-top:10px;border-left-color:var(--s4);
+  background:color-mix(in srgb,var(--s4) 8%,transparent)}
+.keypt b{color:var(--text-primary)}
+@media (max-width:760px){
+  .defrow{grid-template-columns:1fr;gap:9px;padding:14px 2px}
+}
 .bars{display:flex;flex-direction:column;gap:9px}
 .barrow{display:grid;grid-template-columns:168px 1fr 128px;gap:11px;align-items:center;font-size:13px}
 .btrack{background:color-mix(in srgb,var(--text-primary) 7%,transparent);border-radius:5px;
@@ -1189,52 +1217,60 @@ function renderLac(grid) {
                  fmt(w.S, 3), fmt(w.auc, 0), w.cows, fmt(w.records, 0)]));
 
   // 1b · what the persistency numbers actually mean
-  c = card("l1b", "Persistency — three numbers, and only two of them are percentages",
-    `<b>This card exists because “persistency” is used for several different things.</b>`,
-    "");
+  //      A glossary, not a chart — so it takes the whole row and reflows instead of
+  //      overflowing behind the next card, which is what the table version did.
+  c = card("l1b", "Persistency — what the numbers mean",
+    `Four figures on this page are called persistency. Only three are percentages.`, "");
+  c.classList.add("wide");
   grid.appendChild(c);
+  const DEFS = [
+    ["% of peak still there at 305 days", null, w => w.pk305,
+     `The plainest one. At the end of her lactation she is giving this share of what she gave
+      at her best. <code>Y(305) ÷ Y(peak)</code>`],
+    ["% she keeps each month", null, w => w.keep,
+     `“Every month she keeps this much of last month.” The DHI-style figure — the mean of
+      <code>Y(t+30) ÷ Y(t)</code> across the declining phase.`],
+    ["% of peak one month after peak", null, w => w.pk30,
+     `How gently the curve turns over right at the top. All three parities look similar here,
+      which is exactly why this one is the least useful of the three.`],
+    ["Wood’s S", "index, not a %", w => w.S,
+     `<code>−(b+1)·ln(c)</code>. A unitless <b>index</b>, typically 6–7. It ranks the curves
+      correctly but cannot be read as “she keeps X%”. Reported because the literature uses it,
+      not because anyone can interpret it.`]
+  ];
   c.querySelector(".plot").innerHTML = `
-    <div style="font-size:13px;line-height:1.85;color:var(--text-secondary)">
-      <p style="margin:0 0 14px"><b style="color:var(--text-primary)">Persistency means: how well
-      does she hold her yield after peak?</b> A cow who peaks at 30 kg and is still giving 25 kg
-      months later is <i>persistent</i>. One who peaks at 30 and crashes to 10 is not — even
-      though both peaked at the same height. Three different numbers on this page measure it,
-      and they are not interchangeable.</p>
-      <table class="tbl" style="margin-bottom:14px">
-        <thead><tr><th>Measure</th><th>Lac 1</th><th>Lac 2</th><th>Lac 3+</th><th style="text-align:left">What it means</th></tr></thead>
-        <tbody>
-          <tr><td style="text-align:left"><b>% of peak still there at 305 days</b></td>
-              ${Wg.map(w => `<td><b>${fmt(w.pk305, 1)}%</b></td>`).join("")}
-              <td style="text-align:left">The plainest one. At the end of the lactation she is
-              giving this share of what she gave at her best.</td></tr>
-          <tr><td style="text-align:left"><b>% she keeps each month</b></td>
-              ${Wg.map(w => `<td><b>${fmt(w.keep, 1)}%</b></td>`).join("")}
-              <td style="text-align:left">Average of <code>Y(t+30) ÷ Y(t)</code> across the
-              declining phase. “Every month she keeps this much of last month.” The DHI-style
-              number.</td></tr>
-          <tr><td style="text-align:left">% of peak one month after peak</td>
-              ${Wg.map(w => `<td>${fmt(w.pk30, 1)}%</td>`).join("")}
-              <td style="text-align:left">How gently the curve turns over right after the top.</td></tr>
-          <tr><td style="text-align:left">Wood’s S <span class="assume">not a %</span></td>
-              ${Wg.map(w => `<td>${fmt(w.S, 3)}</td>`).join("")}
-              <td style="text-align:left"><code>−(b+1)·ln(c)</code>. A unitless <b>index</b>,
-              typically 6–7. It ranks curves correctly but cannot be read as “she keeps X%”.
-              Reported because the literature uses it — not because it is readable.</td></tr>
-        </tbody>
-      </table>
-      <p style="margin:0 0 10px"><b style="color:var(--text-primary)">Read across the Lac 3+
-      column.</b> She keeps <b>${fmt(Wg[2].keep, 1)}%</b> a month against
-      ${fmt(Wg[0].keep, 1)}% for a heifer — only ${fmt(Wg[0].keep - Wg[2].keep, 1)} points apart,
-      which sounds small. Compounded over ten months it is not: she ends at
+    <p style="margin:0 0 4px;font-size:13.5px;line-height:1.75;color:var(--text-secondary)">
+      <b style="color:var(--text-primary)">Persistency is how well a cow holds her yield after
+      peak.</b> One who peaks at 30 kg and is still giving 25 kg months later is persistent;
+      one who peaks at 30 and crashes to 10 is not — even though both peaked at the same
+      height. Peak alone says very little about what a lactation is worth.
+    </p>
+    <div class="defs">
+      ${DEFS.map(([name, badge, get, why]) => `
+        <div class="defrow">
+          <div class="defname">${name}${badge ? `<span class="assume">${badge}</span>` : ""}</div>
+          <div class="defvals">${Wg.map(w => `
+            <div class="defval"><b style="color:${WCOL[w.g]}">${
+              badge ? fmt(get(w), 3) : fmt(get(w), 1) + "%"
+            }</b><span>${w.g}</span></div>`).join("")}</div>
+          <div class="defwhy">${why}</div>
+        </div>`).join("")}
+    </div>
+    <div class="keypt">
+      <b>Read the Lac 3+ column.</b> She keeps <b>${fmt(Wg[2].keep, 1)}%</b> a month against
+      <b>${fmt(Wg[0].keep, 1)}%</b> for a heifer — ${fmt(Wg[0].keep - Wg[2].keep, 1)} points
+      apart, which sounds small. Compounded over ten months it is not: she ends at
       <b>${fmt(Wg[2].pk305, 1)}% of her peak while the other two end near
-      ${fmt(Wg[0].pk305, 0)}%</b>. That is the same fact Wood’s S is trying to tell you, in a
-      form you can act on.</p>
-      <p style="margin:0"><b style="color:var(--text-primary)">And “% of 305-day yield”, in the
-      milestone table when you open a parity, is a different idea again</b> — not persistency at
-      all. It is <i>how much of the whole lactation has been banked by that day</i>. Lac 3+ has
-      already banked <b>42.8% of her entire 305-day yield in her first 100 days</b>, because she
-      front-loads and then falls away. The three columns add up to 100% at DIM 305 by
-      construction.</p>
+      ${fmt(Wg[0].pk305, 0)}%</b>. That is the same fact Wood’s S is trying to tell you
+      (${fmt(Wg[0].S, 2)} → ${fmt(Wg[2].S, 2)}), in a form you can act on.
+    </div>
+    <div class="keypt">
+      <b>“% of 305-day yield banked” is a different idea again</b> — it appears in the milestone
+      table when you open a parity, and it is <b>not</b> persistency. It is how much of the whole
+      lactation has already been earned by that day, running to 100% at DIM 305 by construction.
+      Lac 3+ has banked <b>42.8% of her entire 305-day yield in her first 100 days</b>, because
+      she front-loads and then falls away. Persistency asks <i>how much of her peak is left
+      today</i>; % banked asks <i>how much of the lactation is already behind her</i>.
     </div>`;
 
   // 2 · 305-day yield
