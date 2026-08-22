@@ -226,7 +226,9 @@ tbody tr:hover{background:color-mix(in srgb,var(--text-primary) 4%,transparent)}
   .brand{height:34px}
   .brandrow{gap:10px}
   /* on a phone the rectangle stacks: text first, logo and byline under it */
-  .notice{flex-direction:column;gap:12px;align-items:center;padding:13px 14px}
+  .notice{gap:12px;align-items:flex-start;padding:13px 14px}
+  .footbrand .brand{height:34px}
+  .byline{font-size:10px}
   .noticetext{font-size:10.5px;text-align:left}
   .notice .brand{height:60px}
   .foot{font-size:12px;line-height:1.65}
@@ -268,6 +270,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--text-primary) 4%,transparent)}
   <a class="navlink" href="index.html">Home</a>
   <a class="navlink" href="udderhealth.html" aria-current="page">Udder health</a>
   <a class="navlink" href="reproduction.html">Reproduction</a>
+  <a class="navlink" href="economics.html">Economics</a>
 </nav>
 
 <header>
@@ -1687,16 +1690,24 @@ function stackChart(host,cats,series,opts={}){
       });
     }
     hit.addEventListener("mousemove",e=>showTip(e,`<b>${opts.full?opts.full[i]:cats[i]}</b>`+
-      series.map(s=>{ const v=s.data[i]||0, pc=totals[i]?v/totals[i]*100:0;
+      series.map(s=>{ const v=s.data[i]||0;
+        // opts.pctOf: share of a supplied population instead of of this column. Without it a
+        // bar carried by one series always reads 100%, which is true and useless.
+        const den=opts.pctOf||totals[i], pc=den?v/den*100:0;
+        // opts.hideZero: when each bar is a single category (one series carries it), the
+        // other series are structural zeros and listing them is noise
+        if(opts.hideZero && !v) return "";
         return `<div class="r"><span style="color:${s.color}">■</span> <span>${s.name}</span>
         <span>${fmtN(v,0)} <span style="color:var(--muted)">(${pc.toFixed(1)}%)</span></span></div>`;}).join("")+
       `<div class="r" style="border-top:1px solid var(--grid);margin-top:4px;padding-top:4px">
-       <span>Total</span><span>${fmtN(totals[i],0)}</span></div>`
+       <span>Total</span><span>${fmtN(totals[i],0)}${opts.totalFmt?` <span style="color:var(--muted)">(${opts.totalFmt(i,totals[i])})</span>`:""}</span></div>`
       +(opts.dayExtra?opts.dayExtra(i):"")));
     hit.addEventListener("mouseleave",hideTip);
     svg.appendChild(hit);
     const t=el("text",{x:X(i),y:Y(totals[i])-6,"text-anchor":"middle",fill:"var(--text-secondary)","font-size":10.5});
-    t.textContent=fmtN(totals[i],dec); svg.appendChild(t);
+    // opts.totalFmt lets a caller print a share instead of a raw count above the bar,
+    // which is the whole point of the "% of quarters" view
+    t.textContent=opts.totalFmt?opts.totalFmt(i,totals[i]):fmtN(totals[i],dec); svg.appendChild(t);
   });
   (opts.refs||[]).forEach(r=>{            // drawn over the bars so the target stays readable
     svg.appendChild(el("line",{x1:PAD.l,x2:W-PAD.r,y1:Y(r.v),y2:Y(r.v),stroke:"var(--muted)",
@@ -2776,25 +2787,107 @@ function render(){
     if(show("teat")){
       const Q=[["RF",15],["LF",16],["RH",17],["LH",18]];
       const KEYS=["N","S","R","VR"];
-      const qAll=Q.flatMap(([,ix])=>MOT.map(m=>m[ix])).filter(v=>v);
+      const TE_RANK={N:0,S:1,R:2,VR:3};
+      const scored=v=>TE_RANK[v]!==undefined;          // excludes "บอด" (blind quarter)
+      const qAll=Q.flatMap(([,ix])=>MOT.map(m=>m[ix])).filter(scored);
       const rough=qAll.filter(v=>v==="R"||v==="VR").length;
       const nN=qAll.filter(v=>v==="N").length;
+      const blind=Q.flatMap(([,ix])=>MOT.map(m=>m[ix])).filter(v=>v&&!scored(v)).length;
+      // One score per cow: her WORST quarter. A cow is as sore as her sorest teat, so a
+      // mean or a modal score would hide exactly the animal you want to find.
+      const worstOf=m=>{const s=Q.map(([,ix])=>m[ix]).filter(scored);
+        return s.length?s.reduce((a,b)=>TE_RANK[b]>TE_RANK[a]?b:a):null;};
+      const worst=MOT.map(worstOf);
+      const nCow=worst.filter(Boolean).length;
+      // The sheet's own "Overall" column is NOT the worst quarter — it disagrees wherever a
+      // cow's quarters differ, so it is reported alongside rather than used.
+      const disagree=MOT.filter((m,i)=>worst[i]&&m[14]&&worst[i]!==m[14]);
+
+      const TV=["By quarter position","By score — % of quarters","Per cow — worst quarter"];
+      const vi=Math.min(viewOf("teat"),TV.length-1);
+      // Each view stacks by a DIFFERENT thing, so each needs its own legend. Printing the
+      // score colours under a chart stacked by quarter position describes an encoding the
+      // chart is not using.
+      const QC=["--s1","--s2","--s3","--s4"];       // colours for the four quarter positions
+      const pcQ=n=>qAll.length?(n/qAll.length*100).toFixed(1)+"%":"—";
+      const pcC=n=>nCow?(n/nCow*100).toFixed(0)+"%":"—";
+
       c=card("teat","Teat-end condition — callosity by quarter",
-        `${MOT.length} cows, ${qAll.length} quarters scored on 7 Aug 2026 · `+
-        `N = normal, no ring · S = smooth ring · R = rough · VR = very rough `+
-        `("บอด" = blind quarter, not scored) · <b>${rough} of ${qAll.length} quarters are rough or worse</b>`+
+        `${MOT.length} cows, ${qAll.length} quarters scored on 7 Aug 2026`+
+        (blind?` (${blind} blind quarter${blind>1?"s":""}, "บอด", not scored)`:"")+` · `+
+        `N = normal, no ring · S = smooth ring · R = rough · VR = very rough · `+
+        `<b>${rough} of ${qAll.length} quarters (${pcQ(rough)}) are rough or worse</b>`+
         (nN===0?", and <b>not one teat scored N</b> — every teat carries at least a smooth ring, "+
           "which is normal wear in a milked cow but means there is no headroom left":"")+` · `+
-        "rough teat ends point at over-milking, vacuum or liner problems — largely smooth ends argue "+
-        "the machine is not the driver · a one-off score, so the month filter does not change this",
-        KEYS.map(k=>lg(`var(${TE_COL[k]})`,k)).join(""));
+        (vi===2
+          ? `<b>Per cow, the worst of her four quarters represents her</b> — a cow is as sore as her `+
+            `sorest teat, so a mean would hide her. <b>n=${nCow} cows, too few to carry a percentage</b>; `+
+            `read the counts.`+
+            (disagree.length?` · <b>Note:</b> the sheet's own "Overall" column is not the worst quarter — `+
+              `cow ${disagree.map(m=>m[0]).join(", ")} `+
+              `${disagree.length>1?"are":"is"} scored `+
+              `${disagree.map(m=>m[14]).join(", ")} there but `+
+              `${disagree.map((m,i)=>worst[MOT.indexOf(m)]).join(", ")} on her worst quarter.`:"")
+          : "rough teat ends point at over-milking, vacuum or liner problems — largely smooth ends argue "+
+            "the machine is not the driver")+
+        ` · a one-off score, so the month filter does not change this`,
+        vi===0
+          ? KEYS.map(k=>lg(`var(${TE_COL[k]})`,k)).join("")
+          : vi===1
+            ? Q.map(([n],qi)=>lg(`var(${QC[qi]})`,n)).join("")+
+              `<span style="color:var(--muted)">colour = which quarter the teat is on · `+
+              `bar height and label = share of all ${qAll.length} scored quarters</span>`
+            : KEYS.map(k=>lg(`var(${TE_COL[k]})`,k)).join("")+
+              `<span style="color:var(--muted)">colour = the score itself · `+
+              `one cow counted once, at her worst quarter</span>`,
+        TV);
       grid.appendChild(c);
-      stackChart(c.querySelector(".plot"),Q.map(q=>q[0]),
-        KEYS.map(k=>({name:k,color:`var(${TE_COL[k]})`,
-          data:Q.map(([,ix])=>MOT.filter(m=>m[ix]===k).length)})),{});
-      c.querySelector(".tv").innerHTML=tbl(
-        ["Cow","Lactation","DIM","Overall","RF","LF","RH","LH"],
-        MOT.map(m=>[m[0],fmtN(m[1],0),fmtN(m[2],0),m[14]||"—",m[15]||"—",m[16]||"—",m[17]||"—",m[18]||"—"]));
+
+      if(vi===0){
+        // x = quarter position, stacked by score
+        stackChart(c.querySelector(".plot"),Q.map(q=>q[0]),
+          KEYS.map(k=>({name:k,color:`var(${TE_COL[k]})`,
+            data:Q.map(([,ix])=>MOT.filter(m=>m[ix]===k).length)})),{});
+        c.querySelector(".tv").innerHTML=tbl(
+          ["Quarter","N","S","R","VR","Scored","% rough or worse"],
+          Q.map(([n,ix])=>{
+            const v=MOT.map(m=>m[ix]).filter(scored);
+            return [n,...KEYS.map(k=>v.filter(x=>x===k).length),v.length,
+                    (v.filter(x=>x==="R"||x==="VR").length/v.length*100).toFixed(0)+"%"];}));
+      } else if(vi===1){
+        // x = score, stacked by which quarter position contributed it
+        stackChart(c.querySelector(".plot"),KEYS,
+          Q.map(([n,ix],qi)=>({name:n,color:`var(${QC[qi]})`,
+            data:KEYS.map(k=>MOT.filter(m=>m[ix]===k).length)})),
+          {totalFmt:(i,t)=>pcQ(t),pctOf:qAll.length,hideZero:true});
+        c.querySelector(".tv").innerHTML=tbl(
+          ["Score","Quarters","% of scored quarters","RF","LF","RH","LH"],
+          KEYS.map(k=>{
+            const n=qAll.filter(v=>v===k).length;
+            return [k,n,pcQ(n),...Q.map(([,ix])=>MOT.filter(m=>m[ix]===k).length)];}));
+      } else {
+        // x = score, one cow counted once at her worst quarter. Each score is its own
+        // series so every bar keeps the score's colour; hideZero keeps the tooltip clean.
+        stackChart(c.querySelector(".plot"),KEYS,
+          KEYS.map(k=>({name:"cows whose worst quarter is "+k,color:`var(${TE_COL[k]})`,
+            data:KEYS.map(k2=>k2===k?worst.filter(w=>w===k).length:0)})),
+          {totalFmt:(i,t)=>t?`${t} of ${nCow}`:"0",pctOf:nCow,hideZero:true});
+        c.querySelector(".tv").innerHTML=tbl(
+          ["Score (worst quarter)","Cows","% of cows","Which cows"],
+          KEYS.map(k=>{
+            const cows=MOT.filter((m,i)=>worst[i]===k);
+            return [k,cows.length,pcC(cows.length),
+                    cows.length?cows.map(m=>m[0]).join(", "):"—"];}));
+      }
+      if(vi!==2){
+        // the per-cow detail stays reachable from the other two views
+        c.querySelector(".tv").innerHTML+=tbl(
+          ["Cow","Lactation","DIM","Worst","Sheet's Overall","RF","LF","RH","LH"],
+          MOT.map((m,i)=>[m[0],fmtN(m[1],0),fmtN(m[2],0),
+            worst[i]?`<b>${worst[i]}</b>`:"—",
+            m[14]?(worst[i]&&m[14]!==worst[i]?`<span style="color:var(--critical)">${m[14]}</span>`:m[14]):"—",
+            m[15]||"—",m[16]||"—",m[17]||"—",m[18]||"—"]));
+      }
     }
     if(show("rout")){
       // The five prep segments sum exactly to total prep time, so the routine can be
