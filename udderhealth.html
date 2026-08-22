@@ -2965,7 +2965,9 @@ function render(){
                  ["<b>Target</b>","","",...NEWD.MOT_TGT.map(v=>`<b>${v||"—"}</b>`)]]));
     }
     // ---- milk flow, per cow, same day as the time-and-motion study ---------------
-    if(show("rout")){
+    // The gate must name THIS card's key. show() is `!expanded || expanded===k`, so gating a
+    // card whose key is "flow" behind show("rout") makes it vanish the moment it is zoomed.
+    if(show("flow")){
       const FK=Object.keys(FLOW).sort((a,b)=>{
         const r=x=>FLOW[x].PM.dip!=null?0:(FLOW[x].PM.slow?1:2);
         return r(a)-r(b) || FLOW[a].PM.fp-FLOW[b].PM.fp; });
@@ -3033,7 +3035,11 @@ function render(){
                  :`● unimodal`}</div>
         </div>`;
       };
-      c.querySelector(".plot").innerHTML=`<div class="sm">${FK.map(panel).join("")}</div>`;
+      // Zoom widens the card; without this the auto-fit grid just packs in more columns at
+      // the same size. Bigger minimum = bigger panels, which is the point of zooming.
+      c.querySelector(".plot").innerHTML=
+        `<div class="sm"${expanded==="flow"?' style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px"':""}>${
+          FK.map(panel).join("")}</div>`;
       c.querySelector(".tv").innerHTML=tbl(
         ["Cow","PM pattern","AM pattern","Yield kg PM","AMT min","% in first 2 min",
          ...WIN.map(w=>"PM "+w+" s"),"PM first 15 s, % of peak","Pre-dip s","Prep lag s"],
