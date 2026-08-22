@@ -512,9 +512,15 @@ function frame(svg, cats, yl, yh, yfmt, band) {
     x.textContent = yfmt ? yfmt(t) : t; svg.appendChild(x);
   });
   svg.appendChild(el("line", { x1: PAD.l, x2: W - PAD.r, y1: H - PAD.b, y2: H - PAD.b, stroke: "var(--axis)" }));
-  const skip = cats.length > 12 ? Math.ceil(cats.length / 12) : 1;
+  // A caller with 305 categories labels only the round ones and blanks the rest. Skipping by
+  // POSITION then threw nearly all of them away — a 305-day curve drew one tick, "1", and
+  // eleven empty slots. Count only the labels that exist, and thin those.
+  const filled = cats.reduce((a, c) => a + (c === "" || c == null ? 0 : 1), 0);
+  const skip = filled > 12 ? Math.ceil(filled / 12) : 1;
+  let nth = 0;
   cats.forEach((c, i) => {
-    if (i % skip) return;
+    if (c === "" || c == null) return;
+    if (nth++ % skip) return;
     const t = el("text", { x: X(i), y: H - PAD.b + 17, "text-anchor": "middle", fill: "var(--muted)", "font-size": 11 });
     t.textContent = c; svg.appendChild(t);
   });
@@ -1141,6 +1147,12 @@ function renderIofc(grid) {
 }
 
 function renderLac(grid) {
+  // Full-width cards scale their viewBox to the row. At 680x300 that lands about 1300x573 —
+  // far taller than it should be. Curve charts on this tab get a wider box; the two narrow
+  // cards at the end are put back to the page default.
+  const wideBox = () => { W = expanded ? 1240 : 1120; H = expanded ? 430 : 330; };
+  const normBox = DEF_BOX;
+  wideBox();
   const H_ = H;   // `H` is shadowed by the group objects inside the health IIFEs
   const WCOL = { "Lac 1": "var(--s1)", "Lac 2": "var(--s3)", "Lac 3+": "var(--s2)" };
   const Wg = D.woods;
@@ -1177,6 +1189,7 @@ function renderLac(grid) {
      ${fmt(Wg[0].pk305, 1)}% for Lac 1</b>; the card below unpacks what "persistency" means here.`,
     Wg.map(w => `<span class="lgi togglable" data-lac="${esc(w.g)}"
       ><i class="sw" style="background:${WCOL[w.g]}"></i>${esc(w.g)} ⤢</span>`).join(""));
+  c.classList.add("wide");
   grid.appendChild(c);
   c.querySelectorAll(".lgi.togglable").forEach(b => b.addEventListener("click", () => {
     const y = scrollY; lacDrill = b.dataset.lac; render(); scrollTo(0, y);
@@ -1275,33 +1288,6 @@ function renderLac(grid) {
       today</i>; % banked asks <i>how much of the lactation is already behind her</i>.
     </div>`;
 
-  // 2 · 305-day yield
-  c = card("l2", "305-day yield and persistency",
-    `305-day yield is the area under each fitted curve. <b>Parity 3+ produces the least of the
-     three</b> — ${fmt(Wg[2].auc, 0)} kg against ${fmt(Wg[1].auc, 0)} for parity 2 — which is
-     backwards for a dairy herd, where third and later lactations should be the most productive.
-     Persistency falls monotonically with parity — <b>${Wg.map(w => fmt(w.pk305, 0) + "%").join(" → ")}
-     of peak still standing at 305 days</b> (Wood's S ${Wg.map(w => fmt(w.S, 2)).join(" → ")}, the
-     same ranking in index form).
-     <b>Inference, not observation:</b> combined with parity 3+ carrying 45.6% not-Normal
-     udder-health tests, the older cows in this herd are underperforming rather than ageing
-     normally.`,
-    lg("var(--s1)", "305-day yield (kg)"));
-  grid.appendChild(c);
-  comboChart(c.querySelector(".plot"), Wg.map(w => w.g), Wg.map(w => w.auc),
-    { name: "Persistency S", data: Wg.map(w => w.S), color: "var(--s2)",
-      fmt: v => v.toFixed(2), vfmt: v => fmt(v, 3) },
-    { pct: true, totalName: "all parities",
-      barColor: (v, i) => WCOL[Wg[i].g], yfmt: v => (v / 1000).toFixed(1) + "k",
-      barName: "305-day yield", vfmt: v => fmt(v, 0) + " kg",
-      extra: i => tipRow("Curve peak", fmt(Wg[i].peak_kg, 1) + " kg on day " + fmt(Wg[i].peak_day, 0)) +
-                  tipRow("Cows", Wg[i].cows) });
-  table(c.querySelector(".tv"),
-    ["Parity", "305-d yield kg", "% of peak at 305 d", "% kept each month", "Wood's S (index)",
-     "Curve peak", "Cows"],
-    Wg.map(w => [w.g, fmt(w.auc, 0), fmt(w.pk305, 1) + "%", fmt(w.keep, 1) + "%", fmt(w.S, 3),
-                 fmt(w.peak_kg, 1) + " kg @ " + fmt(w.peak_day, 0) + " d", w.cows]));
-
   // 3 · healthy against the rest
   const SCOPES=["All herd","Lac 1","Lac 2","Lac 3+"];
   const hAt=(sc,g)=>D.health.find(x=>x.scope===sc&&x.group===g);
@@ -1339,6 +1325,7 @@ function renderLac(grid) {
        ${tiny.length?` · <b style="color:var(--critical)">${tiny.map(g=>g.group+" has only "+g.cows+" cows</b>").join(", ")} — drawn dashed because a curve from that few is those animals, not a group`:""}`,
       gs.map(g=>lg(HCOL[g.group],`${g.group} (${g.cows} cows${g.cows<SMALL?" ⚠":""})`)).join(""),
       SCOPES);
+    c.classList.add("wide");
     grid.appendChild(c);
     const svg=newSvg(c.querySelector(".plot"));
     const cs=gs.map(g=>({g,d:curve(g)})).filter(x=>x.d);
@@ -1392,6 +1379,7 @@ function renderLac(grid) {
        ${K&&K.cows<SMALL?` · <b style="color:var(--critical)">only ${K.cows} cows</b> — drawn dashed`:""}`,
       gs.map(g=>lg(HCOL[g.group],`${g.group} (${g.cows} cows${g.cows<SMALL?" ⚠":""})`)).join(""),
       SCOPES);
+    c.classList.add("wide");
     grid.appendChild(c);
     const svg=newSvg(c.querySelector(".plot"));
     const cs=gs.map(g=>({g,d:curve(g)})).filter(x=>x.d);
@@ -1427,6 +1415,34 @@ function renderLac(grid) {
                  g.auc_305d==null?"—":fmt(g.auc_305d,0)])));
   })();
 
+  normBox();
+  // 5 · 305-day yield
+  c = card("l2", "305-day yield and persistency",
+    `305-day yield is the area under each fitted curve. <b>Parity 3+ produces the least of the
+     three</b> — ${fmt(Wg[2].auc, 0)} kg against ${fmt(Wg[1].auc, 0)} for parity 2 — which is
+     backwards for a dairy herd, where third and later lactations should be the most productive.
+     Persistency falls monotonically with parity — <b>${Wg.map(w => fmt(w.pk305, 0) + "%").join(" → ")}
+     of peak still standing at 305 days</b> (Wood's S ${Wg.map(w => fmt(w.S, 2)).join(" → ")}, the
+     same ranking in index form).
+     <b>Inference, not observation:</b> combined with parity 3+ carrying 45.6% not-Normal
+     udder-health tests, the older cows in this herd are underperforming rather than ageing
+     normally.`,
+    lg("var(--s1)", "305-day yield (kg)"));
+  grid.appendChild(c);
+  comboChart(c.querySelector(".plot"), Wg.map(w => w.g), Wg.map(w => w.auc),
+    { name: "Persistency S", data: Wg.map(w => w.S), color: "var(--s2)",
+      fmt: v => v.toFixed(2), vfmt: v => fmt(v, 3) },
+    { pct: true, totalName: "all parities",
+      barColor: (v, i) => WCOL[Wg[i].g], yfmt: v => (v / 1000).toFixed(1) + "k",
+      barName: "305-day yield", vfmt: v => fmt(v, 0) + " kg",
+      extra: i => tipRow("Curve peak", fmt(Wg[i].peak_kg, 1) + " kg on day " + fmt(Wg[i].peak_day, 0)) +
+                  tipRow("Cows", Wg[i].cows) });
+  table(c.querySelector(".tv"),
+    ["Parity", "305-d yield kg", "% of peak at 305 d", "% kept each month", "Wood's S (index)",
+     "Curve peak", "Cows"],
+    Wg.map(w => [w.g, fmt(w.auc, 0), fmt(w.pk305, 1) + "%", fmt(w.keep, 1) + "%", fmt(w.S, 3),
+                 fmt(w.peak_kg, 1) + " kg @ " + fmt(w.peak_day, 0) + " d", w.cows]));
+
   // 5 · the outage
   c = card("l3", "Why these are group curves and not cow curves",
     `<b>No milk was recorded for any cow between 27 Apr and 16 Jul 2026 — 81 days.</b> Of 63 cows
@@ -1435,24 +1451,34 @@ function renderLac(grid) {
      fitting survives because the pooled record still covers every DIM from both sides of the
      gap: this refit reproduces the parameters stored in August to within
      <b>0.7 days on peak day and 0.3% on 305-day yield</b>. That is the whole reason this tab
-     offers no per-cow curve — the data cannot support one.`,
-    lg("var(--s1)", "records per 5-day DIM bin"));
+     offers no per-cow curve — the data cannot support one. <b>The bars below are how many daily
+     records sit in each 5-day slice of DIM</b>, by parity: the middle of the lactation is well
+     covered and both tails are thin, which is where a fitted line is doing the most work and
+     has the least behind it.`,
+    Wg.map(w => lg(WCOL[w.g], w.g)).join(""));
   grid.appendChild(c);
+  // How much record actually sits under each part of the curve. The tails are thin — that is
+  // where a fitted line is doing the most work and deserves the least trust.
   (function () {
-    const host = c.querySelector(".plot");
     const bins = Array.from({ length: 61 }, (_, i) => i);
-    const counts = bins.map(bi => Wg.reduce((a, w) => {
-      const idx = bi * 5 + 2;
-      return a + (w.observed[idx] != null ? 1 : 0);
-    }, 0));
-    comboChart(host, bins.map(b => (b % 5 === 0) ? String(b * 5) : ""),
-      bins.map(bi => Wg.filter(w => w.observed[bi * 5 + 2] != null).length),
-      null, { barColor: "var(--s1)", yfmt: v => fmt(v, 0),
-              barName: "parity groups with data", vfmt: v => fmt(v, 0) + " of 3" });
+    const cats = bins.map(b => (b % 10 === 0) ? String(b * 5) : "");
+    const rows2 = bins.map(bi => ({ bi }));
+    stackChart(c.querySelector(".plot"), rows2, cats,
+      Wg.map(w => ({ key: w.g, name: w.g, color: WCOL[w.g] })),
+      (r, k) => {
+        const w = Wg.find(x => x.g === k), idx = r.bi * 5 + 2;
+        return (w && w.observed[idx] != null) ? w.observed[idx] : 0;
+      },
+      { yfmt: v => fmt(v, 0), vfmt: v => fmt(v, 0) + " records" });
   })();
+  c.querySelector(".tv").innerHTML = "";
+  normBox();
 }
 
+const DEF_BOX = () => { W = expanded ? 1000 : 680;  H = expanded ? 430 : 300; };
+
 function renderLacDetail(grid, g, WCOL) {
+  W = expanded ? 1240 : 1120; H = expanded ? 430 : 330;   // ld1 is a full-width curve card
   const w = D.woods.find(x => x.g === g);
   const col = WCOL[g] || "var(--s1)";
   const dims = Array.from({ length: 305 }, (_, i) => i + 1);
@@ -1480,6 +1506,7 @@ function renderLacDetail(grid, g, WCOL) {
      not a disagreement.`,
     lg(col, g + " (fitted)") + others.map(o => lg(WCOL[o.g], o.g + " (comparison)")).join("") +
     `<span><i class="sw" style="background:var(--muted)"></i>observed bin means</span>`);
+  c.classList.add("wide");
   grid.appendChild(c);
   const back = document.createElement("button");
   back.className = "btn"; back.style.margin = "0 0 12px";
@@ -1535,6 +1562,7 @@ function renderLacDetail(grid, g, WCOL) {
                             fmt(cum[d - 1], 0), pctS(cum[d - 1], cum[304])]));
 
   // parameter + comparison card
+  DEF_BOX();                            // three bars in a half-width card, not a curve
   c = card("ld2", `${esc(g)} against the other two parities`,
     `Every headline figure for this group, with the other parities beside it. <b>Two persistency
      columns are percentages you can read directly</b> — % of peak still standing at 305 days, and
@@ -1565,6 +1593,7 @@ function renderLacDetail(grid, g, WCOL) {
                       fmt(x.S, 3), fmt(x.auc, 0), pctS(x.auc, tot)]),
     ["All", cw, "100.0%", fmt(D.woods.reduce((a, x) => a + x.records, 0), 0),
      "", "", "", "", "", "", "", fmt(tot, 0), "100.0%"]);
+  DEF_BOX();
 }
 
 // ---------------------------------------------------------------- boot
