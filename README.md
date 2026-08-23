@@ -16,7 +16,7 @@ copying this whole folder to a USB stick or sharing it.
 
 | File | What it is |
 |---|---|
-| `index.html` | **Landing page.** Almost empty by design — a header and the navigation strip. Its job is to hand you on to one of the three dashboards. |
+| `index.html` | **Landing page — a title screen.** A live digital clock (your own device's time and zone; the date in English and in Thai with the Buddhist year) and the QR code that opens this dashboard. It states **no herd figure at all**: every number lives on the page that computed it, and a front page repeating them is a second place for them to go stale. The navigation strip hands you on to the dashboards. |
 | `udderhealth.html` | **Udder health** — 4 tabs: herd and lactation stage, milk quality, udder/mastitis/SCC, milking routine & hygiene (incl. milk flow and bimodality). |
 | `reproduction.html` | **Reproduction** — 4 tabs: scorecard, breeding efficiency, postpartum disease, cow records. |
 | `economics.html` | **Economics** — 4 tabs: feed cost & efficiency (per-pen drill-down), milk flow & losses, IOFC & herd structure (incl. IOFC per cow per day), Wood's lactation curves (per-parity drill-down). **Added 2026-08-22.** |
@@ -52,7 +52,7 @@ Action plan** navigation, so one click moves between any two. The order and the 
 | `Dairy_Milk_Quality_CU_Farm_2569.xlsx` | The source workbook behind the udder-health dashboard — 14 sheets, ~17k live formulas, 7 charts. |
 | `build_reproduction.py` | Generates `reproduction.html` from the master workbook. |
 | `build_economics.py` | Generates `economics.html` from the master workbook. Holds the single `MILK_PRICE` switch — see below. |
-| `build_landing.py` | Generates `index.html`, reading every headline figure from the master workbook. |
+| `build_landing.py` | Generates `index.html`. Reads no data — the landing page carries no figures. Inlines `assets/QR_Dashboard.jpg` as a 900 px 1-bit PNG data URI (3.9 KB) and holds `QR_URL`, the address decoded out of that image; **replace the image and you must re-decode it and update `QR_URL`.** |
 | `build_actionplan.py` | Generates `actionplan.html`. Holds the `ACTIONS` config block — the plan's judgement layer (urgency, cost band, impact score, owner, KPI, deadline), kept visible so it can be argued with and edited without touching the rendering. |
 | `build_feed.py` | Generates `feed.html`. Holds the threshold registry — every cut-off on the page with its source code (ฟ farm · C Cornell · N NRC 2001 · ป adjusted, with the reason) — and the DIM-recovery pass that rebuilds a missing days-in-milk figure from the cow's calving date and the scoring round's own recovered date. Differences against the department report are collected in `DIFFS` as the page is built and counted in section 9. |
 | `build_cullingscore.py` | Generates `cullinglist.html`. Weights live in `cullscore.py`, where each rule returns its points AND the fact that earned them. |

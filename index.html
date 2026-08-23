@@ -264,32 +264,63 @@ tbody tr:hover{background:color-mix(in srgb,var(--text-primary) 4%,transparent)}
 .navlink:focus-visible{outline:2px solid var(--chip-on);outline-offset:2px}
 @media (max-width:640px){.navlink{padding:6px 11px;font-size:13px}}
 
-/* ---- landing page only ---------------------------------------------------- */
-.lead{max-width:660px;color:var(--text-secondary);font-size:14.5px;line-height:1.8;margin:0 0 8px}
-.lead b{color:var(--text-primary);font-weight:600}
-.scale{display:flex;gap:22px;flex-wrap:wrap;margin:22px 0 30px;padding-top:18px;
-  border-top:1px solid var(--border);max-width:660px}
-.scale div{font-size:12.5px;color:var(--muted);line-height:1.45}
-.scale b{display:block;font-size:21px;font-weight:650;color:var(--text-primary);
-  letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-.doors{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:16px;margin-bottom:34px}
-.door{display:block;text-decoration:none;color:inherit;background:var(--surface-1);
-  border:1px solid var(--border);border-radius:12px;padding:20px 22px 22px;
-  box-shadow:var(--shadow);position:relative}
-.door:hover{border-color:var(--chip-on)}
-.door:focus-visible{outline:2px solid var(--chip-on);outline-offset:2px}
-@media (prefers-reduced-motion:no-preference){
-  .door{transition:border-color .15s,transform .15s,box-shadow .15s}
-  .door:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.09)}
+/* ---- landing page only: a title screen — a clock and the way in ------------ */
+.hero{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;
+  gap:clamp(28px,5vw,68px);
+  background:var(--surface-1);border:1px solid var(--border);border-radius:18px;
+  padding:clamp(28px,4.5vw,56px) clamp(24px,4.5vw,60px);
+  box-shadow:var(--shadow);margin:2px 0 28px;min-height:min(56vh,500px);
+  background-image:radial-gradient(115% 95% at 0% 0%,
+    color-mix(in srgb,var(--chip-on) 6%,transparent), transparent 62%);
 }
-.door h2{margin:0 0 3px;font-size:17px;font-weight:650;letter-spacing:-.01em}
-.door .arrow{position:absolute;top:20px;right:22px;color:var(--chip-on);font-size:17px}
-.door .tabs2{color:var(--muted);font-size:12.5px;margin:0 0 16px;line-height:1.6}
-.door .find{border-top:1px solid var(--grid);padding-top:13px;font-size:13px;
-  color:var(--text-secondary);line-height:1.6}
-.door .big{font-size:25px;font-weight:650;color:var(--critical);letter-spacing:-.02em;
-  display:block;font-variant-numeric:tabular-nums}
-.door .cav{color:var(--muted);font-size:12px;margin-top:9px;display:block}
+@media (max-width:880px){
+  .hero{grid-template-columns:1fr;justify-items:center;text-align:center;min-height:0}
+}
+.eyebrow{font-size:11px;font-weight:650;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 clamp(10px,1.6vw,18px)}
+
+/* The clock. Tabular figures so nothing shifts as the digits change — on a projector a
+   jumping colon reads as a broken page. Seconds are set smaller and in the accent colour:
+   the minute is what a reader takes from across a room, the second only proves it is live. */
+.clock{display:flex;align-items:baseline;font-variant-numeric:tabular-nums;
+  font-weight:600;letter-spacing:-.045em;line-height:.92;color:var(--text-primary);
+  font-size:clamp(62px,11.5vw,152px)}
+.clock .cln{color:var(--muted);padding:0 .04em}
+.clock .sec{font-size:.34em;color:var(--chip-on);letter-spacing:-.02em;
+  margin-left:.16em;font-weight:650}
+@media (prefers-reduced-motion:no-preference){
+  @keyframes tickpulse{0%,100%{opacity:1}50%{opacity:.28}}
+  .clock .cln{animation:tickpulse 2s ease-in-out infinite}
+}
+@media (max-width:880px){.clock{justify-content:center}}
+
+.dates{margin-top:clamp(16px,2.4vw,26px);display:flex;flex-direction:column;gap:6px}
+.d-en{font-size:clamp(15px,1.7vw,20px);font-weight:600;letter-spacing:-.01em;
+  color:var(--text-primary)}
+.d-th{font-size:14.5px;color:var(--text-secondary)}
+.tz{margin-top:clamp(14px,2vw,22px);display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  font-size:12px;color:var(--muted)}
+@media (max-width:880px){.tz{justify-content:center}}
+.tz .dot{width:6px;height:6px;border-radius:50%;background:var(--s3);flex:none}
+
+/* The QR sits on a white plaque in both themes. A dark-mode QR drawn on a dark surface is
+   not a style choice, it is an unscannable QR — the quiet zone has to stay white. */
+.qr{display:flex;flex-direction:column;align-items:center;gap:14px;flex:none}
+.qrlink{display:block;text-decoration:none;color:inherit;border-radius:20px}
+.qrlink:focus-visible{outline:2px solid var(--chip-on);outline-offset:5px}
+.qrplate{background:#fff;border:1px solid rgba(11,11,11,.08);border-radius:20px;
+  padding:clamp(12px,1.6vw,18px);line-height:0;box-shadow:0 4px 20px rgba(11,11,11,.10)}
+.qrplate img{display:block;width:clamp(178px,23vw,262px);height:auto}
+@media (prefers-reduced-motion:no-preference){
+  .qrplate{transition:transform .18s,box-shadow .18s}
+  .qrlink:hover .qrplate{transform:translateY(-3px);box-shadow:0 10px 30px rgba(11,11,11,.17)}
+}
+.qrcap{text-align:center;font-size:13px;color:var(--text-secondary);line-height:1.55;
+  max-width:280px}
+.qrcap b{display:block;color:var(--text-primary);font-weight:650;margin-bottom:4px}
+.qrurl{display:block;margin-top:7px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:11.5px;color:var(--muted);word-break:break-all}
 </style>
 </head>
 <body>
@@ -318,52 +349,30 @@ tbody tr:hover{background:color-mix(in srgb,var(--text-primary) 4%,transparent)}
   <button class="btn" id="theme" aria-label="Switch colour theme">Dark</button>
 </header>
 
-<p class="lead">One dairy herd of <b>78 cows</b>, followed through 2026 across
-<b>udder health</b>, <b>reproduction</b> and <b>economics</b>. Every figure on these pages carries its n, its
-source and its caveat; where two sources disagree, both are shown rather than one quietly
-chosen.</p>
+<section class="hero">
+  <div>
+    <p class="eyebrow">Local time</p>
+    <div class="clock" role="timer" aria-live="off">
+      <span id="hh">--</span><span class="cln">:</span><span id="mm">--</span><span class="sec" id="ss">--</span>
+    </div>
+    <div class="dates">
+      <div class="d-en" id="date-en">&nbsp;</div>
+      <div class="d-th" id="date-th">&nbsp;</div>
+    </div>
+    <div class="tz"><span class="dot" aria-hidden="true"></span><span id="tz">device clock</span></div>
+  </div>
 
-<div class="scale">
-  <div><b>78</b>cows</div>
-  <div><b>812</b>milk samples</div>
-  <div><b>15</b>bulk-tank rounds</div>
-  <div><b>79</b>culture isolates</div>
-  <div><b>160</b>veterinary records</div>
-  <div><b>143</b>breeding records</div>
-</div>
-
-<div class="doors">
-  <a class="door" href="udderhealth.html">
-    <span class="arrow" aria-hidden="true">→</span>
-    <h2>Udder health</h2>
-    <p class="tabs2">Herd and lactation stage · milk quality · mastitis and SCC · milking routine</p>
-    <div class="find"><span class="big">31 of 78 cows</span>
-      had a clinical mastitis case — <b>40% of the herd</b> in eight months.
-      <span class="cav">Clinical mastitis runs about four times target. The evidence points to
-      environmental infection between milkings, not the milking plant.</span></div>
-  </a>
-  <a class="door" href="reproduction.html">
-    <span class="arrow" aria-hidden="true">→</span>
-    <h2>Reproduction</h2>
-    <p class="tabs2">Scorecard · breeding efficiency · postpartum disease · cow records</p>
-    <div class="find"><span class="big">26 of 63 cows</span>
-      had endometritis — <b>41.27%</b> against a &lt;10% target, with conception
-      rate at 39.3% (22/56).
-      <span class="cav">Recomputed from raw events: 374 dates in the source were
-      day/month transposed and were repaired against independent evidence.</span></div>
-  </a>
-  <a class="door" href="economics.html">
-    <span class="arrow" aria-hidden="true">→</span>
-    <h2>Economics</h2>
-    <p class="tabs2">Feed cost and efficiency · milk flow and losses</p>
-    <div class="find"><span class="big">฿15.45 per kg</span>
-      of milk sold went on feed — <b>฿3,059,465</b> across Jan–Jul for 197,964 kg,
-      and <b>9,304 kg was discarded</b>.
-      <span class="cav">Feed is the only cost stream recorded anywhere in this project, and
-      no file states a milk price — so the page carries a price you set yourself rather than
-      one invented for it.</span></div>
-  </a>
-</div>
+  <div class="qr">
+    <a class="qrlink" href="https://sirawit-leo.github.io/cu-dairy-dashboard/" target="_blank" rel="noopener noreferrer"
+       aria-label="Open the dashboard at sirawit-leo.github.io/cu-dairy-dashboard">
+      <div class="qrplate">
+        <img src="data:image/png;base64,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" alt="QR code that opens the dashboard at sirawit-leo.github.io/cu-dairy-dashboard" width="900" height="900">
+      </div>
+    </a>
+    <p class="qrcap"><b>Scan to open this dashboard</b>สแกนเพื่อเปิดแดชบอร์ด
+      <span class="qrurl">sirawit-leo.github.io/cu-dairy-dashboard</span></p>
+  </div>
+</section>
 
 <div class="foot">
   <div class="notice">
@@ -383,13 +392,60 @@ chosen.</p>
 </div>
 </div>
 <script>
-// The theme button is the only script here, mirroring the two dashboards so the page looks
-// the same whichever one the reader arrives from.
+// Two things run on this page: the theme button, which mirrors every other dashboard so the
+// page looks the same whichever one the reader arrives from, and the clock.
 document.getElementById("theme").addEventListener("click", () => {
   const dark = document.documentElement.getAttribute("data-theme") === "dark";
   document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
   document.getElementById("theme").textContent = dark ? "Dark" : "Light";
 });
+
+// The clock reads the device's own time — no network, no timezone assumption baked in, so it
+// is right in Saraburi and right in a conference hall elsewhere. Ticking at 250 ms rather than
+// 1000 ms keeps the displayed second from lagging the real one after the tab has been asleep.
+(() => {
+  const pad = n => String(n).padStart(2, "0");
+  const hh = document.getElementById("hh"), mm = document.getElementById("mm"),
+        ss = document.getElementById("ss"),
+        den = document.getElementById("date-en"), dth = document.getElementById("date-th");
+  let lastDay = "";
+
+  function fmt(locale, d) {
+    try {
+      return d.toLocaleDateString(locale,
+        {weekday: "long", day: "numeric", month: "long", year: "numeric"});
+    } catch (e) { return ""; }
+  }
+
+  function tick() {
+    const d = new Date();
+    hh.textContent = pad(d.getHours());
+    mm.textContent = pad(d.getMinutes());
+    ss.textContent = pad(d.getSeconds());
+    // The two date lines only change once a day; reformatting them every tick is wasted work.
+    const key = d.toDateString();
+    if (key !== lastDay) {
+      lastDay = key;
+      den.textContent = fmt("en-GB", d);
+      // Thai with the Buddhist year — 2569, the production year this whole study is about.
+      const th = fmt("th-TH-u-ca-buddhist", d);
+      dth.textContent = th;
+      dth.style.display = th ? "" : "none";
+    }
+  }
+  tick();
+  setInterval(tick, 250);
+
+  // Name the zone the clock is actually showing, so a reader in another country can see at a
+  // glance that this is their time and not the farm's.
+  try {
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    const off = -new Date().getTimezoneOffset() / 60;
+    const gmt = "GMT" + (off >= 0 ? "+" : "\u2212") + Math.abs(off);
+    document.getElementById("tz").textContent =
+      (zone ? zone.replace(/_/g, " ") + " · " : "") + gmt + " · device clock";
+  } catch (e) { /* leave the default label */ }
+})();
 </script>
 </body>
 </html>
