@@ -433,13 +433,6 @@ tbody tr:hover{background:color-mix(in srgb,var(--text-primary) 4%,transparent)}
 .quad .qc{display:block;font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums;margin:1px 0 3px}
 .quad .qd{display:block;font-size:11px;line-height:1.35}
 /* --- the early-read warning --------------------------------------------------------- */
-.warnbox{margin-top:12px;border:1px solid var(--serious);border-left:3px solid var(--serious);
-  border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.5;
-  background:color-mix(in srgb,var(--serious) 7%,transparent)}
-.warntab{width:100%;border-collapse:collapse;margin-top:8px;font-size:11.5px}
-.warntab th,.warntab td{padding:4px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
-.warntab th{font-weight:650;color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.03em}
-.warntab .r{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 .warnpip{color:var(--serious);font-weight:700}
 
 </style>
@@ -531,7 +524,6 @@ is the only cost stream this farm records.</p>
     </div></div>
     <div id="lagmx"></div>
     <div id="lagmx-scale" class="scale"></div>
-    <div id="earlywarn"></div>
   </div>
   <div class="card wide">
     <div class="chead"><div>
@@ -873,32 +865,6 @@ function lagmx() {
     });
     c.addEventListener("mouseleave", hideTip);
   });
-  earlywarn();
-}
-
-// The one finding this axis makes possible: an OUTCOME measure scheduled before it could
-// physically have moved. A compliance measure read early is correct and is not flagged.
-function earlywarn() {
-  const v = shown().filter(a => a.early).sort((a, b) => a.rank - b.rank);
-  const host = document.getElementById("earlywarn");
-  if (!v.length) { host.innerHTML = ""; return; }
-  host.innerHTML =
-    "<div class='warnbox'><b>" + v.length + " of " + P.actions.length +
-    " actions have an outcome KPI scheduled before it could move.</b> " +
-    "Their first re-measurement will read <i>no change</i> for a reason that has nothing to do " +
-    "with whether the action is working. Check compliance at that date instead, and judge the " +
-    "outcome at the later one — an action abandoned on its first flat reading is the failure " +
-    "this row exists to prevent." +
-    "<table class='warntab'><thead><tr><th>Action</th><th>Outcome KPI</th>" +
-    "<th class='r'>First look</th><th class='r'>Could move</th></tr></thead><tbody>" +
-    v.map(a => "<tr><td><button class='hmchip' data-id='" + a.id + "' type='button'>" +
-      "<i class='dot' style='background:" + DOMC[a.domain] + "'></i><b>" + a.id + "</b></button> " +
-      esc(a.title.length > 44 ? a.title.slice(0, 42) + "…" : a.title) + "</td>" +
-      "<td>" + esc(a.kpi) + "</td>" +
-      "<td class='r'>month " + a.remeasure_month + "</td>" +
-      "<td class='r'><b>month " + a.lag + "</b></td></tr>").join("") +
-    "</tbody></table></div>";
-  wireChips("#earlywarn");
 }
 
 // ---- heat map 2: every action against every criterion ---------------------
