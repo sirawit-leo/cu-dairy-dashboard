@@ -5,6 +5,87 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dairy Herd Monitoring — Reproduction — Chula Dairy Research Farm, 2026</title>
 <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAFn0lEQVR42u2XS0xUWxaGv332qQcYQlURDEjfoAMUuon2NfTIRyflc8CgI1Gucxk4IcYZIQ5EutW+HWPsiyY6bdSYGBLTfe34SAwOaFtTKYOEtw8Eefooi6Iozjl79UCooKD3MrkO+q7k5Kyc7Me//7XWv/ZRgPAVzeIr268A7Pl3ZpH/S5gLBBYDsAH9NUMgSim01iilfol9ZUkOiAie5yGysqpcDvBKDpEFUFFRQUtLC2vXrl3RIguAF49fySGshcm2bVNdXU1tbS0AWn85JbTWaK2prq6mvr4eEcHv96O1JhwOr4gF0Vo7gOzdu1eOHDkigNi2LUopmY/XZ5+2tjbp7OwUy7Ky3y5duiQ1NTUyv/Zy85wF3wYwxqCUIh6Ps2fPHmzbxnXdZZlQSuF5HocPHyYUChEIBKisrOTq1atcu3YNrTX79u1jenqa69ev/ywmBHAWTtDY2Cg7duyQYDAowWDwsyevqKiQeDwuIiKe58mndvnyZZmvri8yoOYd17IsW0QoKSnh9u3bKKWYnJykq6uLt2/fMjk5STwe5/Xr14yOjjI1NUU4HOb8+fMcOHCA6elp2tvb8fl8zMzMsG3bNqampqirq6O9vR2tNZ7nLRYie7EQoZTCGMPu3bvp7e2lqakJYwzl5eVs2rSJ0tJS6uvrmZiYIJlMsmbNGjKZDHl5eQDk5uZSWFjIunXrcF2XWCzGzZs36ezszK79xRAopcSyLLl3755UV1cvoW3r1q3S2toqt27dkrNnz8rY2JgsZwvhOHr06M8KAYBYluUAsn79enn8+LFEIpHs4MLCQtm/f7/09vZKS0uLOI4jjuPI3bt3JZPJiDFGjDHieZ709vZm/VgsJn6//ycBLOmGubm5iAjRaJSysjIOHjzIuXPniEQibNmyhYcPH6K1pqqqChHJ0mtZFg0NDRw/fpynT5/S1tZGfn5+dsxnlXSeJldE7JycHB49esSpU6eoq6sjlUrR19fH8PAwtbW1bNy4ke7ubsrKygDIycnJlvDg4CBVVVUkEgmi0SjJZJJYLIYxZjllzCbhkiq4cuUK6XSaYDBIUVER5eXluK5LIpGguLiYYDDI/fv32bx5MwUFBRhjsG2bY8eO0dzcjM/nw3GcDzJrfSB4mQT8fBV0dHRw5swZ0uk0MzMzKKUoKirC7/czPj7O7OwsAwMDJBIJampq0FozOTnJxYsXsSwLz/Oy4rWo7FBKLdsjllxCnj17lqXX5/OhtWZubo6CggJCoRCpVIrS0lJevnzJmzdvKCwspL+/n4mJiY+akjGGb7/9PYFAkP88eJDNhU9B2J+20Gg0iud5vHr16sNVKZOhuLgYrTWWZREOhwEIhUIMDw/z7t07uru7UUqxevVqxsfHERH+UFXFP//1IyD88MPfOXGieVkmljBQUlLChQsX8Pv9OI5DY2MjpaWlOI6Dz+cjEolQWVnJyZMn2blzJ6dPnyaRSCAiHDp0iFgsRjwe50/79nHiL39lV/SPNDWdIBDIofnPzWRmZz8CYS/XZnt6etiwYQOWZZFMJnny5MlHYwYHB2loaKC/v59QKERXVxcAnZ2d3Lhxg+npaYwRfvz3LX77uwru3LlDMvkedz45l2Mgq0pzc3Nqoa5HRkZQSonP58N13WyYtNak02mVl5eH53n09PQIwPv377FtW+Xn54tSSn13oEa2b99OR0fHT17J7PmSVK7rMj4+Tjgc5vnz54iI8jxPGWOUMUZ5nqfS6bRKpVIUFBSQSCTo6+tTgNq1a5cC+P77v6kHD/7L2NiYGhp6qbTWyrZttbDHYuYXnLfGGHs+6QJDQ0OuMcYeGBhwAPNp5s7MzDAyMhLIzc11Vq1aFUilUmmAFy9eEI/HdWvrP8zo6CsrFAp533zzG0ZGhrOasEgHIouF6Ndfs/9fAP8Dte8eBGDCvjQAAAAASUVORK5CYII=">
+<script>
+/* Theme, resolved before the first paint so no page ever flashes the wrong one.
+   Order: the URL (used only when storage is blocked), then the reader's stored choice, then
+   LIGHT. Light is the deliberate default even on a machine set to dark — these pages are shown
+   from a projector as often as from a desk, and the reader's own click is the only thing that
+   moves them. The markup already carries data-theme="light", so with JavaScript off the page
+   still lands on the same default. */
+(function () {
+  try {
+    var m = /[?&#]theme=(dark|light)/.exec(location.search + location.hash);
+    var t = m ? m[1] : null;
+    if (!t) { try { t = localStorage.getItem("cu-dairy-theme"); } catch (e) {} }
+    document.documentElement.setAttribute("data-theme", t === "dark" ? "dark" : "light");
+  } catch (e) {}
+})();
+</script>
+<script>
+/* One theme button, shared by all seven pages — assets/theme.json, the same single-source
+   rule the navigation strip already follows.
+
+   The choice is remembered in localStorage, and that is the whole point: every page in this
+   suite is a separate document, so the attribute a click sets dies the moment the reader moves
+   to the next tab. Storing it is what makes dark mode follow them across the strip.
+
+   When storage is unavailable — site data blocked, or a file:// origin that refuses it — the
+   choice rides in the navigation links instead, so it still crosses the suite. The links are
+   left clean whenever storage works, because these URLs get bookmarked and pasted into slides.
+   Nothing is written until the reader actually clicks.
+
+   redraw: pages whose charts read their colours at draw time pass their own repaint here. */
+function themeInit(redraw) {
+  var KEY = "cu-dairy-theme";
+  var root = document.documentElement;
+  var btn = document.getElementById("theme");
+  var store = (function () {
+    try {
+      localStorage.setItem(KEY + ":probe", "1");
+      localStorage.removeItem(KEY + ":probe");
+      return true;
+    } catch (e) { return false; }
+  })();
+
+  function current() { return root.getAttribute("data-theme") === "dark" ? "dark" : "light"; }
+
+  function label() {
+    if (!btn) return;
+    var d = current() === "dark";
+    /* the button names the theme it will switch TO, so it always describes its own action */
+    btn.textContent = d ? "Light" : "Dark";
+    btn.setAttribute("aria-label", d ? "Switch to light mode" : "Switch to dark mode");
+  }
+
+  function stampLinks() {
+    if (store) return;
+    var q = current() === "dark" ? "?theme=dark" : "";
+    var links = document.querySelectorAll("a.navlink");
+    for (var i = 0; i < links.length; i++) {
+      links[i].setAttribute("href", links[i].getAttribute("href").split("?")[0] + q);
+    }
+  }
+
+  function apply(t) {
+    root.setAttribute("data-theme", t);
+    if (store) { try { localStorage.setItem(KEY, t); } catch (e) {} }
+    label();
+    stampLinks();
+    if (typeof redraw === "function") redraw();
+  }
+
+  /* A theme arriving in the URL is a deliberate share — adopt it for the rest of the visit. */
+  if (store && /[?&#]theme=(dark|light)/.test(location.search + location.hash)) {
+    try { localStorage.setItem(KEY, current()); } catch (e) {}
+  }
+
+  label();
+  stampLinks();
+  if (btn) btn.addEventListener("click", function () {
+    apply(current() === "dark" ? "light" : "dark");
+  });
+}
+</script>
 <style>
 
 
@@ -2814,12 +2895,7 @@ function renderEnergy() {
 }
 
 // ---------------------------------------------------------------- boot
-document.getElementById("theme").addEventListener("click", () => {
-  const dark = document.documentElement.getAttribute("data-theme") === "dark";
-  document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
-  document.getElementById("theme").textContent = dark ? "Dark" : "Light";
-  render();
-});
+themeInit(render);
 document.getElementById("back").addEventListener("click", () => { expanded = null; render(); });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && expanded) { expanded = null; render(); } });
 render();
