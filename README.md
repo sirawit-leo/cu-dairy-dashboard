@@ -21,7 +21,7 @@ copying this whole folder to a USB stick or sharing it.
 | `reproduction.html` | **Reproduction** — 4 tabs: scorecard, breeding efficiency, postpartum disease, cow records. |
 | `economics.html` | **Economics** — 4 tabs: feed cost & efficiency (per-pen drill-down), milk flow & losses, IOFC & herd structure (incl. IOFC per cow per day), Wood's lactation curves (per-parity drill-down). **Added 2026-08-22.** |
 | `feed.html` | **Feed evaluation** — 4 tabs plus a per-cow record at the foot; clicking any cow on any chart opens it. Tabs: ration & intake, nutrient balance (per cow, August), grouping, outcomes (feed efficiency, MUN, body condition). Every chart is SVG written at build time, so the pictures do not depend on JavaScript. **Added 2026-08-23.** |
-| `cullinglist.html` | **Culling** — the chronic-mastitis and reproduction culling list as one decision page. |
+| `cullinglist.html` | **Culling** — a ranked attention list, in English. Two scores per cow, udder /25 and reproduction /25, totalling /50; every rule prints the measured fact that earned its points, so any score explains itself. **Rebuilt 2026-08-23.** |
 | `actionplan.html` | **Action plan** — 4 tabs: priority (a cost × impact heat map and a criteria scan grid), 180-day roadmap, the 15 actions in detail, evidence & gaps. The herd team's own problem list, costed and sequenced. **Added 2026-08-22.** |
 
 **Percentages.** The page shows one only where the parts genuinely compose a whole — inside a
@@ -55,6 +55,7 @@ Action plan** navigation, so one click moves between any two. The order and the 
 | `build_landing.py` | Generates `index.html`, reading every headline figure from the master workbook. |
 | `build_actionplan.py` | Generates `actionplan.html`. Holds the `ACTIONS` config block — the plan's judgement layer (urgency, cost band, impact score, owner, KPI, deadline), kept visible so it can be argued with and edited without touching the rendering. |
 | `build_feed.py` | Generates `feed.html`. Holds the threshold registry — every cut-off on the page with its source code (ฟ farm · C Cornell · N NRC 2001 · ป adjusted, with the reason). |
+| `build_cullingscore.py` | Generates `cullinglist.html`. Weights live in `cullscore.py`, where each rule returns its points AND the fact that earned them. |
 | `svgkit.py` | Draws every chart as SVG text from Python, so no picture depends on a script running. |
 | `assets/` | Brand logos, and the shared page shell + navigation the two generators read. |
 | `backups/` | Every prior version, timestamped. Nothing has been deleted. |
