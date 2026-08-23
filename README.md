@@ -20,7 +20,7 @@ copying this whole folder to a USB stick or sharing it.
 | `udderhealth.html` | **Udder health** — 4 tabs: herd and lactation stage, milk quality, udder/mastitis/SCC, milking routine & hygiene (incl. milk flow and bimodality). |
 | `reproduction.html` | **Reproduction** — 4 tabs: scorecard, breeding efficiency, postpartum disease, cow records. |
 | `economics.html` | **Economics** — 4 tabs: feed cost & efficiency (per-pen drill-down), milk flow & losses, IOFC & herd structure (incl. IOFC per cow per day), Wood's lactation curves (per-parity drill-down). **Added 2026-08-22.** |
-| `feed.html` | **Feed evaluation** — 4 tabs: ration & intake, nutrient balance (per cow, August), grouping, outcomes (feed efficiency, MUN, body condition). Every chart is SVG written at build time, so the pictures do not depend on JavaScript. **Added 2026-08-23.** |
+| `feed.html` | **Feed evaluation** — 4 tabs plus a per-cow record at the foot; clicking any cow on any chart opens it. Tabs: ration & intake, nutrient balance (per cow, August), grouping, outcomes (feed efficiency, MUN, body condition). Every chart is SVG written at build time, so the pictures do not depend on JavaScript. **Added 2026-08-23.** |
 | `cullinglist.html` | **Culling** — the chronic-mastitis and reproduction culling list as one decision page. |
 | `actionplan.html` | **Action plan** — 4 tabs: priority (a cost × impact heat map and a criteria scan grid), 180-day roadmap, the 15 actions in detail, evidence & gaps. The herd team's own problem list, costed and sequenced. **Added 2026-08-22.** |
 
