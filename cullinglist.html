@@ -287,12 +287,28 @@ tbody tr:hover{background:color-mix(in srgb,var(--text-primary) 4%,transparent)}
 .crow:focus{outline:2px solid var(--chip-on);outline-offset:-2px}
 .tag.warnflag{border-color:var(--warning);color:var(--warning)}
 .tag.nsflag{border-color:var(--muted);color:var(--muted)}
-.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr));gap:16px}
-.rule{display:flex;gap:11px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--grid)}
-.rule:last-child{border-bottom:0}
-.rw{flex:none;width:26px;height:26px;border-radius:6px;color:#fff;font-weight:700;font-size:13px;
+/* Tabs hide content, so they are gated on body.js — with scripting off both panes simply
+   stack and nothing is lost. */
+.pane{display:block}
+body.js .pane{display:none}
+body.js .pane.on{display:block}
+body:not(.js) .tabs{display:none}
+.rulebox{padding:13px 0;border-bottom:1px solid var(--grid)}
+.rulebox:last-of-type{border-bottom:0}
+.rbh{display:flex;gap:11px;align-items:flex-start}
+.rbh > div{flex:1;min-width:0}
+.rw{flex:none;width:28px;height:28px;border-radius:7px;color:#fff;font-weight:700;font-size:13px;
   display:flex;align-items:center;justify-content:center}
-.rs{font-size:12px;color:var(--text-secondary);margin-top:2px;line-height:1.55}
+.rbn{flex:none;font-size:12px;font-weight:650;color:var(--text-secondary);text-align:right;
+  white-space:nowrap;padding-top:5px}
+.rs{font-size:12.5px;color:var(--text-secondary);margin-top:2px;line-height:1.55}
+.rrl{margin:9px 0 0 39px;border-left:2px solid var(--grid);padding-left:12px}
+.rr{display:flex;justify-content:space-between;gap:14px;font-size:12.5px;padding:3px 0;
+  color:var(--text-secondary)}
+.rrp{font-weight:700;color:var(--text-primary);font-variant-numeric:tabular-nums;white-space:nowrap}
+.rwhy{margin:9px 0 0 39px;font-size:12.5px;line-height:1.65;color:var(--muted)}
+.flagbox .rrl{display:none}
+.flagbox{border-bottom:0}
 /* the breakdown: one line per rule, with the measured fact that earned it */
 .bd{margin:0 0 16px}
 .bdh{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
@@ -346,14 +362,14 @@ worth a closer look and exactly why. It does not recommend culling anyone — th
 a person reading the detail, and the detail is one click away on every row. <b>No cow reaches
 anywhere near 50</b>; the scale is for ranking, not a percentage of how bad she is.</div>
 
-<p class="lead">Both axes carry the same five weights — <b>8 · 7 · 5 · 3 · 2</b> — so the two
-columns read in parallel and adding them means something. <b>Parity is not scored.</b> The score
-says how bad the problem is; parity says how expensive it is to act on it, and a first-lactation
-cow has not yet repaid her rearing. Mixing the two would make a 7 unreadable — is the udder bad,
-or is she just old? So parity sits alongside as a column, and you weigh it.</p>
-
 <div class="tiles"><div class="tile"><div class="k">Cows scored</div><div class="v">41</div><div class="n">of 63 in the herd</div></div><div class="tile"><div class="k">Highest score</div><div class="v">24</div><div class="n">out of 50 possible</div></div><div class="tile"><div class="k">Median, of those scored</div><div class="v">9</div><div class="n">half sit below this</div></div><div class="tile"><div class="k">Scoring on both axes</div><div class="v">15</div><div class="n">an udder problem and a breeding problem</div></div><div class="tile"><div class="k">Teat end not assessed</div><div class="v">48</div><div class="n">they cannot reach the top of that group</div></div><div class="tile"><div class="k">Fair-chance flagged</div><div class="v">19</div><div class="n">the breeding failure looks like the farm's</div></div></div>
 
+<div class="tabs" role="tablist">
+  <button class="tab" role="tab" data-pane="ranked" aria-selected="true">Ranked<span class="tn">who and how much</span></button>
+  <button class="tab" role="tab" data-pane="rules" aria-selected="false">Rules<span class="tn">every criterion in full</span></button>
+</div>
+
+<section class="pane on" id="pane-ranked">
 <div class="card wide">
   <div class="chead"><div>
     <h3 class="ctitle">Ranked</h3>
@@ -374,23 +390,43 @@ or is she just old? So parity sits alongside as a column, and you weigh it.</p>
   <div id="body"><p class="empty">Pick a cow above.</p></div>
 </div>
 
-<div class="card wide">
-  <div class="chead"><div>
-    <h3 class="ctitle">The rules</h3>
-    <p class="csub">This is judgement, written down so it can be argued with — not a
-      measurement. The number on the left is what each group is worth.</p>
-  </div></div>
-  <div class="rules">
-    <div><h4 style="margin:0 0 6px;font-size:14px">Udder &mdash; 25</h4><div class="rule"><div class="rw" style="background:var(--s2)">8</div><div><b>A · Persistence</b><div class="rs">How long the infection has run without clearing</div></div></div><div class="rule"><div class="rw" style="background:var(--s2)">7</div><div><b>B · Clinical burden</b><div class="rs">How often she has been treated, and whether treatment held</div></div></div><div class="rule"><div class="rw" style="background:var(--s2)">5</div><div><b>C · Severity</b><div class="rs">How high the cell count actually goes</div></div></div><div class="rule"><div class="rw" style="background:var(--s2)">3</div><div><b>D · Permanent loss</b><div class="rs">What will not come back</div></div></div><div class="rule"><div class="rw" style="background:var(--s2)">2</div><div><b>E · Herd risk</b><div class="rs">Whether she is a source for the rest of the herd</div></div></div></div>
-    <div><h4 style="margin:0 0 6px;font-size:14px">Reproduction &mdash; 25</h4><div class="rule"><div class="rw" style="background:var(--s3)">8</div><div><b>A · Days open</b><div class="rs">How far past a 365-day calving interval this lactation already is</div></div></div><div class="rule"><div class="rw" style="background:var(--s3)">7</div><div><b>B · Service failure</b><div class="rs">How many times she has been served and not held</div></div></div><div class="rule"><div class="rw" style="background:var(--s3)">5</div><div><b>C · Pathology</b><div class="rs">A named physical reason she is not conceiving</div></div></div><div class="rule"><div class="rw" style="background:var(--s3)">3</div><div><b>D · Lost pregnancy</b><div class="rs">A whole lactation already given up</div></div></div><div class="rule"><div class="rw" style="background:var(--s3)">2</div><div><b>E · Farm decision</b><div class="rs">The farm has already taken her out of the breeding programme</div></div></div></div>
+</section>
+
+<section class="pane" id="pane-rules">
+  <div class="notbox" style="border-left-color:var(--chip-on)">
+    <b>Both axes carry the same five weights &mdash; 8 &middot; 7 &middot; 5 &middot; 3 &middot; 2.</b>
+    Group A is always <i>how long has this run</i>, B <i>how many times has it failed</i>,
+    C <i>how severe</i>, D <i>what is permanently gone</i>, E <i>someone has already decided</i>.
+    Because the shape is the same on both sides, the two columns read in parallel and adding
+    them means something.<br><br>
+    <b>Parity is not scored.</b> The score says how bad the problem is; parity says how
+    expensive it is to act on it, and a first-lactation cow has not yet repaid her rearing.
+    Mixing the two would make a 7 unreadable &mdash; is the udder bad, or is she just old? So
+    parity sits alongside as a column, and you weigh it.
   </div>
-  <p class="src-line"><b>Fair-chance flags</b> (F1&ndash;F4) mark a breeding failure that looks
-    like the farm's rather than the cow's &mdash; served late, never served, months without a
-    service, or served with the herd's lowest-conception bull. They never change the score; they
-    are printed against it, and only where there is a reproductive score to qualify.
-    <b>n/s</b> means teat end was never assessed &mdash; that is not a pass, and she cannot
-    reach the top of that group.</p>
-</div>
+  <div class="grid">
+    <div class="card">
+      <div class="chead"><div><h3 class="ctitle">Udder &mdash; 25</h3>
+        <p class="csub">Is this udder beyond economic repair?</p></div></div>
+      <div class="rulebox"><div class="rbh"><span class="rw" style="background:var(--s2)">8</span><div><b>A · Persistence</b><div class="rs">How long has the infection run without clearing?</div></div><span class="rbn" title="cows in this herd scoring on this group">12 <span class="u">cows · top 8</span></span></div><div class="rrl"><div class="rr"><span class="rrc">3–4 consecutive infected tests</span><span class="rrp">3</span></div><div class="rr"><span class="rrc">5–6 consecutive</span><span class="rrp">5</span></div><div class="rr"><span class="rrc">7 or more consecutive</span><span class="rrp">7</span></div><div class="rr"><span class="rrc">and every test this year was infected</span><span class="rrp">+1</span></div></div><p class="rwhy">One high reading is a bad day. A run is an infection that has settled in and is no longer being cleared between tests — which is what makes it a cow problem rather than an incident.</p></div><div class="rulebox"><div class="rbh"><span class="rw" style="background:var(--s2)">7</span><div><b>B · Clinical burden</b><div class="rs">How often has she been treated, and did the treatment hold?</div></div><span class="rbn" title="cows in this herd scoring on this group">17 <span class="u">cows · top 7</span></span></div><div class="rrl"><div class="rr"><span class="rrc">2 clinical episodes this year</span><span class="rrp">2</span></div><div class="rr"><span class="rrc">3 episodes</span><span class="rrp">4</span></div><div class="rr"><span class="rrc">4 or more</span><span class="rrp">6</span></div><div class="rr"><span class="rrc">and she relapsed after a drug the antibiogram called appropriate</span><span class="rrp">+2</span></div></div><p class="rwhy">Repeat treatment is the cow-level failure signal. The relapse clause matters most: if the right drug was used and she came back anyway, drug choice is not the limiting factor and more treatment will not fix her.</p></div><div class="rulebox"><div class="rbh"><span class="rw" style="background:var(--s2)">5</span><div><b>C · Severity</b><div class="rs">How high does the cell count actually go?</div></div><span class="rbn" title="cows in this herd scoring on this group">22 <span class="u">cows · top 5</span></span></div><div class="rrl"><div class="rr"><span class="rrc">peak SCC ≥ 1,000 ×1000</span><span class="rrp">2</span></div><div class="rr"><span class="rrc">peak SCC ≥ 5,000 ×1000</span><span class="rrp">3</span></div><div class="rr"><span class="rrc">and mean SCC ≥ 400 ×1000</span><span class="rrp">+2</span></div></div><p class="rwhy">Peak says how bad the worst episode was; the mean says whether she sits high all the time. A cow can reach a high peak and recover — the two together separate a spike from a permanently high-cell cow.</p></div><div class="rulebox"><div class="rbh"><span class="rw" style="background:var(--s2)">3</span><div><b>D · Permanent loss</b><div class="rs">What will not come back?</div></div><span class="rbn" title="cows in this herd scoring on this group">6 <span class="u">cows · top 3</span></span></div><div class="rrl"><div class="rr"><span class="rrc">a blind quarter is recorded</span><span class="rrp">3</span></div><div class="rr"><span class="rrc">3 or more treatments to the same quarter</span><span class="rrp">2</span></div><div class="rr"><span class="rrc">teat end rough or very rough</span><span class="rrp">+1</span></div></div><p class="rwhy">Irreversible damage. A quarter treated three times is functionally lost whether or not anyone has written "blind" against it, and a damaged teat end keeps re-admitting bacteria however well she is treated.</p></div><div class="rulebox"><div class="rbh"><span class="rw" style="background:var(--s2)">2</span><div><b>E · Herd risk</b><div class="rs">Is she a source for the rest of the herd?</div></div><span class="rbn" title="no cow in this herd scores on this group">0 <span class="u">cows · top 0</span></span></div><div class="rrl"><div class="rr"><span class="rrc">Staph. aureus, Strep. agalactiae or Mycoplasma cultured</span><span class="rrp">2</span></div></div><p class="rwhy">These spread cow to cow at milking and cure poorly. This is the one group that is about the OTHER cows rather than about her.</p></div>
+    </div>
+    <div class="card">
+      <div class="chead"><div><h3 class="ctitle">Reproduction &mdash; 25</h3>
+        <p class="csub">Is she failing to get back in calf, and is it hers to answer for?</p></div></div>
+      <div class="rulebox"><div class="rbh"><span class="rw" style="background:var(--s3)">8</span><div><b>A · Days open</b><div class="rs">How far past a 365-day calving interval is this lactation already?</div></div><span class="rbn" title="cows in this herd scoring on this group">20 <span class="u">cows · top 8</span></span></div><div class="rrl"><div class="rr"><span class="rrc">open at 150–200 days in milk</span><span class="rrp">3</span></div><div class="rr"><span class="rrc">open at 201–250</span><span class="rrp">5</span></div><div class="rr"><span class="rrc">open beyond 250</span><span class="rrp">7</span></div><div class="rr"><span class="rrc">and past 250 with services already used</span><span class="rrp">+1</span></div><div class="rr"><span class="rrc">confirmed pregnant</span><span class="rrp">0 — the clock has stopped</span></div></div><p class="rwhy">Every day open past roughly 115 DIM is a day added to the calving interval, and it cannot be recovered later in the lactation. This is the group that measures cost already incurred rather than risk.</p></div><div class="rulebox"><div class="rbh"><span class="rw" style="background:var(--s3)">7</span><div><b>B · Service failure</b><div class="rs">How many times has she been served without holding?</div></div><span class="rbn" title="cows in this herd scoring on this group">14 <span class="u">cows · top 7</span></span></div><div class="rrl"><div class="rr"><span class="rrc">3 services this lactation, still open</span><span class="rrp">2</span></div><div class="rr"><span class="rrc">4–5 services, still open</span><span class="rrp">4</span></div><div class="rr"><span class="rrc">6 or more, still open</span><span class="rrp">6</span></div><div class="rr"><span class="rrc">and the last pregnancy diagnosis was negative</span><span class="rrp">+1</span></div></div><p class="rwhy">"Repeat breeder" in the hard sense: served repeatedly AND failed. Services alone are not a fault — a cow served four times who is now pregnant scores nothing here.</p></div><div class="rulebox"><div class="rbh"><span class="rw" style="background:var(--s3)">5</span><div><b>C · Pathology</b><div class="rs">Is there a named physical reason she is not conceiving?</div></div><span class="rbn" title="cows in this herd scoring on this group">21 <span class="u">cows · top 4</span></span></div><div class="rrl"><div class="rr"><span class="rrc">uterine pathology this lactation, still open</span><span class="rrp">3</span></div><div class="rr"><span class="rrc">ovarian pathology, still open</span><span class="rrp">2</span></div><div class="rr"><span class="rrc">and retained placenta at the last calving</span><span class="rrp">+1</span></div></div><p class="rwhy">A named lesion is different from bad luck: it points at something treatable, or at something that will keep recurring. Retained placenta is scored as an add-on because it is a risk factor for the uterine disease rather than a separate failure.</p></div><div class="rulebox"><div class="rbh"><span class="rw" style="background:var(--s3)">3</span><div><b>D · Lost pregnancy</b><div class="rs">Has a whole lactation already been given up?</div></div><span class="rbn" title="cows in this herd scoring on this group">5 <span class="u">cows · top 3</span></span></div><div class="rrl"><div class="rr"><span class="rrc">abortion this lactation</span><span class="rrp">3</span></div><div class="rr"><span class="rrc">and more than one abortion on record</span><span class="rrp">+1</span></div></div><p class="rwhy">An abortion costs the lactation it interrupts and carries a recurrence risk. A second one on record is the part that changes the outlook.</p></div><div class="rulebox"><div class="rbh"><span class="rw" style="background:var(--s3)">2</span><div><b>E · Farm decision</b><div class="rs">Has the farm already taken her out of the breeding programme?</div></div><span class="rbn" title="cows in this herd scoring on this group">1 <span class="u">cow · top 2</span></span></div><div class="rrl"><div class="rr"><span class="rrc">flagged Not for Insemination</span><span class="rrp">2</span></div></div><p class="rwhy">The decision has been taken by someone who saw the cow. Only the exit date is still open, so this scores low on purpose — it confirms rather than discovers.</p></div>
+    </div>
+  </div>
+  <div class="card wide" style="margin-top:16px">
+    <div class="chead"><div><h3 class="ctitle">Fair-chance flags</h3>
+      <p class="csub">These never change a score. They mark a breeding failure that looks like
+        the farm's rather than the cow's, and they are shown only where there is a reproductive
+        score for them to qualify.</p></div></div>
+    <div class="grid"><div class="rulebox flagbox"><div class="rbh"><span class="rw" style="background:var(--warning)">F1</span><div><b>First service later than DIM 100</b></div></div><p class="rwhy">She started late because the farm started her late. Days open is being counted against a cow who was not offered the chance to conceive earlier.</p></div><div class="rulebox flagbox"><div class="rbh"><span class="rw" style="background:var(--warning)">F2</span><div><b>More than 60 days with no service while open and eligible</b></div></div><p class="rwhy">Nobody is trying. This is not a failure of the cow.</p></div><div class="rulebox flagbox"><div class="rbh"><span class="rw" style="background:var(--warning)">F3</span><div><b>Half or more of her services used the herd’s lowest-conception bull</b></div></div><p class="rwhy">Try Me S conceives at 19.2% against Try Me’s 43.8% (p = 0.034). Her failure to hold may be the straw, not the cow.</p></div><div class="rulebox flagbox"><div class="rbh"><span class="rw" style="background:var(--warning)">F4</span><div><b>Never served at all this lactation</b></div></div><p class="rwhy">There is no breeding failure to judge, because no breeding was attempted.</p></div></div>
+    <p class="src-line"><b>n/s</b> beside a cow means her teat end was never assessed. That is a
+      gap in the record, not a clean bill &mdash; and it caps group D below its maximum, so she
+      cannot reach the top of the udder axis at all.</p>
+  </div>
+</section>
 
 <div class="foot">
   <p><b>Before quoting anything here.</b> The score is a ranking device built from the farm's own
@@ -474,6 +510,16 @@ function show(id, scroll){
   if(scroll !== false)
     document.getElementById("detail").scrollIntoView({behavior:"smooth", block:"start"});
 }
+
+document.body.classList.add("js");
+document.querySelectorAll(".tab").forEach(function(t){
+  t.addEventListener("click", function(){
+    document.querySelectorAll(".tab").forEach(function(o){
+      o.setAttribute("aria-selected", o === t ? "true" : "false"); });
+    document.querySelectorAll(".pane").forEach(function(p){
+      p.classList.toggle("on", p.id === "pane-" + t.dataset.pane); });
+  });
+});
 
 document.querySelectorAll("#rank .crow").forEach(function(tr){
   tr.addEventListener("click", function(){ show(tr.dataset.cow); });
