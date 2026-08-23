@@ -21,7 +21,7 @@ copying this whole folder to a USB stick or sharing it.
 | `reproduction.html` | **Reproduction** — 4 tabs: scorecard, breeding efficiency, postpartum disease, cow records. |
 | `economics.html` | **Economics** — 4 tabs: feed cost & efficiency (per-pen drill-down), milk flow & losses, IOFC & herd structure (incl. IOFC per cow per day), Wood's lactation curves (per-parity drill-down). **Added 2026-08-22.** |
 | `feed.html` | **Feed evaluation** — 4 tabs plus a per-cow record at the foot; clicking any cow on any chart opens it. Tabs: ration & intake, nutrient balance (per cow, August), grouping, outcomes (feed efficiency, MUN, body condition). Every chart is SVG written at build time, so the pictures do not depend on JavaScript. **Added 2026-08-23.** |
-| `cullinglist.html` | **Culling** — a ranked attention list, in English. Two scores per cow, udder /25 and reproduction /25, totalling /50; every rule prints the measured fact that earned its points, so any score explains itself. **Rebuilt 2026-08-23.** |
+| `cullinglist.html` | **Culling** — a ranked attention list, in English. Three scores per cow — udder /25, reproduction /25, economic /30, totalling /80 — with what she has cost the farm in baht; every rule prints the measured fact that earned its points, so any score explains itself. **Rebuilt 2026-08-23.** |
 | `actionplan.html` | **Action plan** — 4 tabs: priority (a cost × impact heat map and a criteria scan grid), 180-day roadmap, the 15 actions in detail, evidence & gaps. The herd team's own problem list, costed and sequenced. **Added 2026-08-22.** |
 
 **Percentages.** The page shows one only where the parts genuinely compose a whole — inside a
